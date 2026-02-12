@@ -1,0 +1,35 @@
+services:
+  nullguard:
+    build: .
+    ports:
+       - "8080:8080"
+      # WireGuard UDP ports (add udp ports for each WireGuard server instance)
+       - "51820:51820/udp"
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_SSL_ENABLED: ${SERVER_SSL_ENABLED:-false}
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-nullguard}
+      DB_USER: ${DB_USER:-nullguard}
+      DB_PASS: ${DB_PASS:-changeme}
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:-}
+      WG_SERVER_DEFAULT_NAME: ${WG_SERVER_DEFAULT_NAME:-wg0}
+      WG_SERVER_DEFAULT_COMMENT: ${WG_SERVER_DEFAULT_COMMENT:-nullguard}
+      WG_SERVER_DEFAULT_ADDR: ${WG_SERVER_DEFAULT_ADDR:-10.252.0.1/24}
+      WG_SERVER_DEFAULT_PORT: ${WG_SERVER_DEFAULT_PORT:-51820}
+      WG_SERVER_DEFAULT_SUPERNET: ${WG_SERVER_DEFAULT_SUPERNET:-128.0.0.0/1, 0.0.0.0/1}
+      WG_SERVER_DEFAULT_KEEPALIVE: ${WG_SERVER_DEFAULT_KEEPALIVE:-30}
+      WG_SERVER_DEFAULT_CONF_PATH: ${WG_SERVER_DEFAULT_CONF_PATH:-/etc/wireguard}
+      WG_SERVER_CONF_PATH: ${WG_SERVER_CONF_PATH:-/etc/wireguard}
+      WG_CLIENT_DEFAULT_NAME: ${WG_CLIENT_DEFAULT_NAME:-my-wg-client}
+      AUTO_START_SERVERS: ${AUTO_START_SERVERS:-false}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SESSION_MAX_AGE: ${SESSION_MAX_AGE:-3600}
+      ENV: ${ENV:-production}
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+

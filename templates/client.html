@@ -1,0 +1,34 @@
+{{define "content"}}
+<script src="/static/js/client.js"></script>
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fa-solid fa-network-wired"></i> Clients</h3>
+    <hr>
+
+    <div id="server-select-form" class="mb-3">
+        <label for="serverSelect" class="mb-2">Select Server</label>
+        <div class="d-flex justify-content-between align-items-center">
+            <select id="serverSelect" class="form-control" name="serverSelect" style="width: 360px;">
+                {{range .Servers}}
+                <option value="{{.ID}}">{{.InterfaceName}}({{.Address}})</option>
+                {{end}}
+            </select>
+            <a href="#" id="create-client" class="btn btn-secondary"><i class="fas fa-plus me-2"></i>Add Client</a>
+        </div>
+    </div>
+
+    <div>
+        <label for="serverSelect" class="mb-2">Search clients</label>
+        <div class="input-group" style="width: 360px;">
+            <span class="input-group-text">
+                <i class="fas fa-search"></i>
+            </span>
+            <input type="search" id="searchClient" class="form-control" placeholder="Search..." />
+        </div>
+    </div>
+
+    <hr>
+    <div>
+        <ul id="clientList" name="clientList" class="list-unstyled"></ul>
+    </div>
+</div>
+{{end}}

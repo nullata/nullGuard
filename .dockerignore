@@ -1,0 +1,15 @@
+.git
+.gitignore
+.vscode
+docs
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.md
+local-wg-setup.sh
+VERSION
+docker-image-build.sh
+.env.example
+.env
+integration-tests

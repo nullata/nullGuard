@@ -1,0 +1,77 @@
+{{define "content"}}
+<script src="/static/js/client-update-ips.js"></script>
+<script src="/static/js/create-client.js"></script>
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fa-solid fa-network-wired"></i> Client Configuration</h3>
+    <hr>
+
+    {{if eq .Mode "edit" }}
+    <p>Edit client:</p>
+    {{else}}
+    <p>Create a new client:</p>
+    {{end}}
+
+    <div id="server-select-form" class="mb-3">
+        <label for="serverSelect" class="mb-2">Select Server</label>
+        <div class="d-flex justify-content-between align-items-center">
+            <select id="serverSelect" class="form-control" name="serverSelect" style="width: 360px;">
+                {{range .Servers}}
+                <!-- $ references parent scope directly -->
+                {{ if eq .ID $.SelectedServerID }}
+                <option value="{{.ID}}" selected>{{.InterfaceName}}({{.Address}})</option>
+                {{ else }}
+                <option value="{{.ID}}">{{.InterfaceName}}({{.Address}})</option>
+                {{end}}
+                {{end}}
+            </select>
+        </div>
+    </div>
+
+    <hr>
+    <form id="create-client-form">
+        <div class="form-group">
+            <label for="name">Client Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{.DefaultClient.Name}}" required>
+        </div>
+        <div class="form-group">
+            <label for="publicKey">Public Key</label>
+            <input type="text" class="form-control" id="publicKey" name="publicKey" value="{{.DefaultClient.PublicKey}}"
+                disabled required>
+        </div>
+        <div class="form-group">
+            <label for="privateKey">Private Key</label>
+            <input type="text" class="form-control" id="privateKey" name="privateKey"
+                value="{{.DefaultClient.PrivateKey}}" disabled required>
+        </div>
+        <div class="form-group">
+            <label for="address">Client IP Address CIDR</label>
+            <input type="text" class="form-control" id="address" name="address" value="" required>
+        </div>
+        <div class="form-group">
+            <label for="allowedIps">Allowed IPs</label>
+            <input type="text" class="form-control" id="allowedIps" name="allowedIps" value="" required>
+        </div>
+        <div class="form-group">
+            <label for="dnsServers">DNS Servers</label>
+            <input type="text" class="form-control" id="dnsServers" name="dnsServers" value=""
+                placeholder="e.g. 8.8.8.8, 1.1.1.1">
+        </div>
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="useServerDns">
+            <label class="form-check-label" for="useServerDns">Use Server DNS</label>
+        </div>
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="fullTunnel" name="fullTunnel">
+            <label class="form-check-label" for="fullTunnel">Full Tunnel</label>
+        </div>
+        <div class="form-group">
+            <label for="keepalive">Keepalive</label>
+            <input type="number" class="form-control" id="keepalive" name="keepalive" value="" required>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save</button>
+        <span class="wide-span"></span>
+        <a href="#" id="cancel" class="text-secondary">Cancel</a>
+    </form>
+
+</div>
+{{end}}

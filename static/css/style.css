@@ -1,0 +1,618 @@
+/* CSS Variables for Light/Dark Theme */
+:root {
+    /* Background colors */
+    --bg-body: #ffffff;
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #e9ecef;
+    --bg-card: #ffffff;
+    --bg-header: #f8f9fa;
+    --bg-footer: #f8f9fa;
+    --bg-input: #ffffff;
+    --bg-modal: #ffffff;
+
+    /* Text colors */
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #6c757d;
+    --text-on-dark: #ffffff;
+
+    /* Border colors */
+    --border-color: #dee2e6;
+    --border-input: #ced4da;
+
+    /* Button colors - keeping Bootstrap defaults */
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #6c757d;
+    --btn-secondary-text: #ffffff;
+    --btn-success-bg: #28a745;
+    --btn-success-text: #ffffff;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-text: #ffffff;
+    --btn-info-bg: #17a2b8;
+    --btn-info-text: #ffffff;
+
+    /* Status colors */
+    --status-active: #28a745;
+    --status-inactive: #6c757d;
+
+    /* Link colors */
+    --link-color: #0d6efd;
+    --link-hover: #0a58ca;
+
+    /* Shadow */
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-lg: rgba(0, 0, 0, 0.15);
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    /* Background colors */
+    --bg-body: #1a1a1a;
+    --bg-primary: #2d2d2d;
+    --bg-secondary: #3a3a3a;
+    --bg-card: #2d2d2d;
+    --bg-header: #212121;
+    --bg-footer: #212121;
+    --bg-input: #3a3a3a;
+    --bg-modal: #2d2d2d;
+
+    /* Text colors */
+    --text-primary: #e9ecef;
+    --text-secondary: #adb5bd;
+    --text-muted: #6c757d;
+    --text-on-dark: #ffffff;
+
+    /* Border colors */
+    --border-color: #495057;
+    --border-input: #495057;
+
+    /* Button colors - adjusted for dark theme */
+    --btn-primary-bg: #0d6efd;
+    --btn-primary-text: #ffffff;
+    --btn-secondary-bg: #6c757d;
+    --btn-secondary-text: #ffffff;
+    --btn-success-bg: #28a745;
+    --btn-success-text: #ffffff;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-text: #ffffff;
+    --btn-info-bg: #17a2b8;
+    --btn-info-text: #ffffff;
+
+    /* Status colors */
+    --status-active: #28a745;
+    --status-inactive: #6c757d;
+
+    /* Link colors */
+    --link-color: #6ea8fe;
+    --link-hover: #9ec5fe;
+
+    /* Shadow */
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-lg: rgba(0, 0, 0, 0.5);
+}
+
+/* Smooth transitions for theme switching */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ensure the body takes the full viewport height */
+html, body {
+    height: 100%;
+    margin: 0;
+    background-color: var(--bg-body) !important;
+    color: var(--text-primary);
+}
+
+/* whole page container */
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* main content takes remaining space pushing the footer to the bottom */
+main {
+    flex: 1;
+    background-color: transparent;
+}
+
+/* Container backgrounds should be transparent to show body background */
+.container, .container-fluid {
+    background-color: transparent;
+}
+
+/* footer styles */
+footer {
+    background-color: var(--bg-footer);
+    padding: 1rem 0;
+    text-align: center;
+    width: 100%;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-bottom: 5px;
+}
+
+.status-dot.active {
+    background-color: var(--status-active);
+}
+
+.status-dot.inactive {
+    background-color: var(--status-inactive);
+}
+
+.status-dot.inline {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 0;
+    margin-right: 6px;
+}
+
+.client-traffic {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+.client-traffic-icon {
+    color: var(--text-muted);
+}
+
+.wide-span {
+    display: inline-block;
+    width: 12px;
+}
+
+.modal-custom-position .modal-dialog {
+    margin-top: 12%;
+    /* move the modal down */
+}
+
+.form-check-input {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+/* Form spacing improvements */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control,
+.form-select {
+    padding: 0.5rem 0.75rem;
+}
+
+/* Ensure select elements show dropdown arrow */
+select.form-control,
+.form-select {
+    appearance: auto;
+    -webkit-appearance: auto;
+    -moz-appearance: auto;
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    padding-right: 2.5rem;
+}
+
+.no-items-mt {
+    margin-top: 36px;
+}
+
+/* Button styles */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Client action buttons - neutral base with colored hover */
+.btn-client-action {
+    background-color: #495057;
+    border-color: #495057;
+    color: #ffffff;
+}
+
+.btn-client-qr:hover {
+    border-color: #6c757d;
+    color: #6c757d;
+}
+
+.btn-client-download:hover {
+    border-color: #28a745;
+    color: #28a745;
+}
+
+.btn-client-delete:hover {
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.btn-primary:hover,
+.btn-success:hover,
+.btn-danger:hover,
+.btn-info:hover,
+.btn-client-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: var(--bg-modal);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.modal-header {
+    background-color: var(--btn-primary-bg);
+    border-bottom-color: var(--border-color);
+    color: #ffffff;
+}
+
+.modal-title {
+    color: #ffffff;
+}
+
+.modal-body {
+    color: var(--text-primary);
+}
+
+.modal-footer {
+    background-color: var(--bg-primary);
+    border-top-color: var(--border-color);
+}
+
+/* Theme Toggle Button */
+#theme-toggle {
+    background: none !important;
+    border: none !important;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: var(--text-primary) !important;
+    transition: transform 0.3s ease;
+}
+
+#theme-toggle:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+#theme-icon {
+    color: var(--text-primary);
+}
+
+/* Navbar Brand */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Navbar toggler (hamburger) */
+.navbar-toggler {
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    font-size: 1.25rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+/* Navbar link colors */
+.navbar-light .navbar-nav .nav-link,
+.navbar-light .navbar-brand {
+    color: #212529;
+    transition: color 0.2s ease;
+}
+
+.navbar-light .navbar-nav .nav-link:hover,
+.navbar-light .navbar-nav .nav-link:focus,
+.navbar-light .navbar-brand:hover,
+.navbar-light .navbar-brand:focus {
+    color: #c82333;
+}
+
+/* Theme toggle button hover */
+#theme-toggle:hover,
+#theme-toggle:focus {
+    color: #c82333 !important;
+}
+
+#theme-toggle:hover #theme-icon,
+#theme-toggle:focus #theme-icon {
+    color: #c82333 !important;
+}
+
+/* Accordion header custom styling */
+.accordion-header-custom {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.accordion-header-custom:hover {
+    background-color: var(--bg-secondary);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+/* Client edit link */
+.client-edit-link {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.client-edit-link:hover {
+    color: var(--link-hover);
+}
+
+.client-edit-link .edit-icon {
+    font-size: 0.75em;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.client-edit-link:hover .edit-icon {
+    opacity: 1;
+}
+
+/* Dropdown hover effects */
+.dropdown-item {
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--bg-primary);
+    color: #c82333;
+}
+
+/* Bootstrap Component Overrides for Dark Theme */
+[data-theme="dark"] {
+
+    /* Buttons */
+    .btn-secondary {
+        background-color: #495057;
+        border-color: #495057;
+        color: #ffffff;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #545b62;
+        color: #ffffff;
+    }
+
+    .btn-secondary:focus,
+    .btn-secondary:active {
+        background-color: #5a6268;
+        border-color: #4e555b;
+        color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
+    }
+
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+
+    .btn-primary:focus,
+    .btn-primary:active {
+        box-shadow: 0 0 0 0.2rem rgba(49, 132, 253, 0.5);
+    }
+
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+
+    .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+    }
+
+    .btn-client-qr:hover {
+        border-color: #ffffff;
+        color: #ffffff;
+    }
+
+    /* Cards */
+    .card {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .card-body {
+        color: var(--text-primary);
+    }
+
+    .card-title {
+        color: var(--text-primary);
+    }
+
+    .card-text {
+        color: var(--text-secondary);
+    }
+
+    /* Forms */
+    .form-control,
+    .form-select {
+        background-color: var(--bg-input);
+        border-color: var(--border-input);
+        color: var(--text-primary);
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: var(--bg-input);
+        border-color: var(--btn-primary-bg);
+        color: var(--text-primary);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-label {
+        color: var(--text-primary);
+    }
+
+    /* Modal close button for dark theme */
+    .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
+
+    /* Containers and backgrounds */
+    .bg-light {
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary);
+    }
+
+    .bg-white {
+        background-color: var(--bg-card) !important;
+    }
+
+    .border {
+        border-color: var(--border-color) !important;
+    }
+
+    /* Text colors */
+    .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* Tables */
+    .table {
+        color: var(--text-primary);
+        border-color: var(--border-color);
+        --bs-table-bg: transparent;
+        --bs-table-striped-bg: rgba(255, 255, 255, 0.05);
+        --bs-table-hover-bg: var(--bg-secondary);
+    }
+
+    .table th,
+    .table td {
+        color: var(--text-primary);
+        border-color: var(--border-color);
+    }
+
+    .table thead th {
+        background-color: var(--bg-primary);
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    /* Badges in dark theme */
+    .badge.bg-success {
+        background-color: var(--btn-success-bg) !important;
+    }
+
+    .badge.bg-warning {
+        background-color: #ffc107 !important;
+        color: #000000 !important;
+    }
+
+    .badge.bg-danger {
+        background-color: var(--btn-danger-bg) !important;
+    }
+
+    /* Navbar/Header */
+    .navbar {
+        background-color: var(--bg-header) !important;
+    }
+
+    .navbar-light {
+        background-color: var(--bg-header) !important;
+    }
+
+    /* Navbar toggler for dark theme */
+    .navbar-light .navbar-toggler {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: var(--text-primary) !important;
+    }
+
+    /* Navbar colors for dark theme */
+    .navbar-light .navbar-brand,
+    .navbar-light .navbar-nav .nav-link {
+        color: var(--text-primary);
+    }
+
+    .navbar-light .navbar-nav .nav-link:hover,
+    .navbar-light .navbar-nav .nav-link:focus,
+    .navbar-light .navbar-brand:hover,
+    .navbar-light .navbar-brand:focus {
+        color: #c82333 !important;
+    }
+
+    /* Text color overrides */
+    .text-secondary {
+        color: #adb5bd !important;
+    }
+
+    /* Lists */
+    .list-group-item {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+
+    /* Links */
+    a {
+        color: var(--link-color);
+    }
+
+    a:hover {
+        color: #c82333;
+    }
+
+    /* Dropdown menu background for dark theme */
+    .dropdown-menu {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+    }
+
+    .dropdown-item {
+        color: var(--text-primary);
+    }
+
+    /* Input groups */
+    .input-group-text {
+        background-color: var(--bg-secondary);
+        border-color: var(--border-input);
+        color: var(--text-primary);
+    }
+
+    /* HR dividers */
+    hr {
+        border-color: var(--border-color);
+        opacity: 0.5;
+    }
+}

@@ -1,0 +1,98 @@
+{{define "content"}}
+<script src="/static/js/server.js"></script>
+<script src="/static/js/update-server.js"></script>
+<script src="/static/js/delete-server.js"></script>
+<script src="/static/js/deploy-server.js"></script>
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fa-solid fa-server"></i> Server Configuration</h3>
+    <hr>
+    <div id="server-select-form" class="mb-3">
+        <label for="serverSelect" class="mb-2">Select Server</label>
+        <div class="d-flex justify-content-between align-items-center">
+            <select id="serverSelect" class="form-control" name="serverSelect" style="width: 360px;">
+                {{range .Servers}}
+                <option value="{{.ID}}">{{.InterfaceName}}({{.Address}})</option>
+                {{end}}
+            </select>
+            <a href="/create-server" class="btn btn-secondary"><i class="fas fa-plus me-2"></i>Add Server</a>
+        </div>
+    </div>
+    <div class="d-flex align-items-center">
+        <label for="serverStatus" class="mb-2 me-2">Server Status:</label>
+        <span class="wide-span"></span>
+        <strong id="serverStatusText" style="margin-bottom: 5px; margin-right: 6px;">Inactive</strong>
+        <span id="serverStatusDot" class="status-dot inactive"></span>
+    </div>
+    <div class="d-flex align-items-center">
+        <button type="button" id="start" class="btn btn-success"><i class="fas fa-play me-2"></i>Deploy & Start</button>
+        <button type="button" id="stop" class="btn btn-danger d-none"><i class="fas fa-stop me-2"></i>Stop</button>
+        <button type="button" id="restart" class="btn btn-secondary d-none ms-2"><i class="fa-solid fa-arrow-rotate-right me-2"></i>Restart</button>
+    </div>
+
+    <hr>
+    <div class="accordion-header-custom" data-bs-toggle="collapse" data-bs-target="#serverConfigCollapse"
+        aria-expanded="false">
+        <h5 class="d-flex align-items-center justify-content-between mb-0">
+            <span>Edit Configuration</span>
+            <i class="fas fa-chevron-up" id="serverConfigChevron"
+                style="font-size: 0.8em; transition: transform 0.3s ease; transform: rotate(-180deg);"></i>
+        </h5>
+    </div>
+    <div class="collapse" id="serverConfigCollapse">
+        <form id="update-server-form">
+            <div class="form-group">
+                <label for="interfaceName">Interface Name</label>
+                <input type="text" class="form-control" id="interfaceName" name="interfaceName" value="" required>
+            </div>
+            <div class="form-group">
+                <label for="comment">Comment</label>
+                <input type="text" class="form-control" id="comment" name="comment" value="">
+            </div>
+            <div class="form-group">
+                <label for="address">Address CIDR</label>
+                <input type="text" class="form-control" id="address" name="address" value="" required>
+            </div>
+            <div class="form-group">
+                <label for="port">Port</label>
+                <input type="number" class="form-control" id="port" name="port" value="" required>
+            </div>
+            <div class="form-group">
+                <label for="publicKey">Public Key</label>
+                <input class="form-control" id="publicKey" name="publicKey" value="" disabled readonly></input>
+            </div>
+            <div class="form-group">
+                <label for="privateKey">Private Key</label>
+                <input class="form-control" id="privateKey" name="privateKey" value="" disabled readonly></input>
+            </div>
+            <div class="form-group">
+                <label for="postUp">Post Up</label>
+                <textarea class="form-control" id="postUp" name="postUp" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="postDown">Post Down</label>
+                <textarea class="form-control" id="postDown" name="postDown" rows="3"></textarea>
+            </div>
+            <div>&nbsp;</div>
+
+            <h5>Default Client Configurations</h5>
+            <hr>
+            <div class="form-group">
+                <label for="wanAddress">WAN Address</label>
+                <input type="text" class="form-control" id="wanAddress" name="wanAddress" value="" required>
+            </div>
+            <div class="form-group">
+                <label for="supernetCidr">Default Client Supernet CIDR</label>
+                <input type="text" class="form-control" id="supernetCidr" name="supernetCidr" value="">
+            </div>
+            <div class="form-group">
+                <label for="defaultKeepAlive">Default Client Keep Alive</label>
+                <input type="number" class="form-control" id="defaultKeepAlive" name="defaultKeepAlive" value="">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save</button>
+            <span class="wide-span"></span>
+            <a href="#" id="delete" class="text-danger">Delete</a>
+        </form>
+    </div>
+</div>
+
+{{end}}

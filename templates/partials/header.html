@@ -1,0 +1,40 @@
+<header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="/"><img src="/static/images/logo.png" alt="NickScripts" style="height: 30px; margin-bottom: 6px;">&nbsp;nullGuard</a>
+            <div class="d-flex align-items-center order-lg-last">
+                <button id="theme-toggle" class="nav-link bg-transparent border-0"
+                    style="color: var(--text-primary);" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/server">Server</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/client">Client</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Account
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                            <a class="dropdown-item" href="/admin/settings"><i class="fas fa-cog me-2"></i>Admin Settings</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" id="logout-link"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<script src="/static/js/header.js"></script>

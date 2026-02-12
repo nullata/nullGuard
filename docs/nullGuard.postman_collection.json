@@ -1,0 +1,577 @@
+{
+  "info": {
+    "name": "nullGuard",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "list-servers",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/api/v1/list-servers",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "list-servers"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create-client",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/create-client",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "create-client"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "delete-client",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"clientId\": 23,\r\n  \"serverId\": 5\r\n}"
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/delete-client",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "delete-client"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "list-clients",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/api/v1/list-clients/5",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "list-clients",
+            "5"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "restart-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/restart-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "restart-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "health",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/v1/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"defaultKeepAlive\": 30,\r\n  \"comment\": \"Production VPN\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/create-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "create-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "fetch-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"id\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/fetch-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "fetch-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "update-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"publicKey\": \"your-server-public-key\",\r\n  \"privateKey\": \"your-server-private-key\",\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"defaultKeepAlive\": 30\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/update-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "update-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "delete-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/delete-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "delete-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "deploy-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/deploy-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "deploy-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "stop-server",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/stop-server",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "stop-server"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "update-client",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"id\": 1,\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25,\r\n  \"publicKey\": \"client-public-key\",\r\n  \"privateKey\": \"client-private-key\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/update-client",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "update-client"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get-client-config",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/api/v1/client/5/23/config",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "client",
+            "5",
+            "23",
+            "config"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "get-client-qrcode",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/api/v1/client/5/23/qrcode",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "client",
+            "5",
+            "23",
+            "qrcode"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "download-client-config",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "localhost:8080/api/v1/client/5/23/download",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "client",
+            "5",
+            "23",
+            "download"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

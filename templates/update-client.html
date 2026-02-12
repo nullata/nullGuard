@@ -1,0 +1,70 @@
+{{define "content"}}
+<script src="/static/js/client-update-ips.js"></script>
+<script src="/static/js/update-client.js"></script>
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fa-solid fa-network-wired"></i> Update Client Configuration</h3>
+    <hr>
+
+    <div id="server-info" class="mb-3">
+        <label for="serverSelect" class="mb-2">Server:</label>
+        <div id="server" data-server-id="{{.ClientData.ServerID}}" data-server-address="{{.ServerAddress}}">{{.ServerInterface}}({{.ServerAddress}})</div>
+    </div>
+
+    <!-- div to avoid auto serialization; reference value only -->
+    <div id="serverSupernet" data-supernet="{{.ServerSupernet}}" style="display: none;"></div>
+    <div id="clientId" data-client-id="{{.ClientData.ID}}" style="display: none;"></div>
+
+    <hr>
+    <form id="update-client-form">
+        <div class="form-group">
+            <label for="name">Client Name</label>
+            <input type="text" class="form-control" id="name" name="name" value="{{.ClientData.Name}}" required>
+        </div>
+        <div class="form-group">
+            <label for="publicKey">Public Key</label>
+            <input type="text" class="form-control" id="publicKey" name="publicKey" value="{{.ClientData.PublicKey}}"
+                disabled required>
+        </div>
+        <div class="form-group">
+            <label for="privateKey">Private Key</label>
+            <input type="text" class="form-control" id="privateKey" name="privateKey" value="{{.ClientData.PrivateKey}}"
+                disabled required>
+        </div>
+        <div class="form-group">
+            <label for="address">Client IP Address CIDR</label>
+            <input type="text" class="form-control" id="address" name="address" value="{{.ClientData.AddressCidr}}"
+                required>
+        </div>
+        <div class="form-group">
+            <label for="allowedIps">Allowed IPs</label>
+            <input type="text" class="form-control" id="allowedIps" name="allowedIps" value="{{.ClientData.AllowedIps}}"
+                required>
+        </div>
+        <div class="form-group">
+            <label for="dnsServers">DNS Servers</label>
+            <input type="text" class="form-control" id="dnsServers" name="dnsServers" value="{{.ClientData.DnsServers}}"
+                placeholder="e.g. 8.8.8.8, 1.1.1.1">
+        </div>
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="useServerDns">
+            <label class="form-check-label" for="useServerDns">Use Server DNS</label>
+        </div>
+        <div class="form-group form-check">
+            {{if .ClientData.FullTunnel}}
+            <input type="checkbox" class="form-check-input" id="fullTunnel" name="fullTunnel" checked>
+            {{else}}
+            <input type="checkbox" class="form-check-input" id="fullTunnel" name="fullTunnel">
+            {{end}}
+            <label class="form-check-label" for="fullTunnel">Full Tunnel</label>
+        </div>
+        <div class="form-group">
+            <label for="keepalive">Keepalive</label>
+            <input type="number" class="form-control" id="keepalive" name="keepalive" value="{{.ClientData.Keepalive}}"
+                required>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save</button> <!-- clears the client object from the cookie -->
+        <span class="wide-span"></span>
+        <a href="#" id="cancel" class="text-secondary">Cancel</a> <!-- clears the client object from the cookie -->
+    </form>
+</div>
+{{end}}

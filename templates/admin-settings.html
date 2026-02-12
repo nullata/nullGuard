@@ -1,0 +1,73 @@
+{{define "content"}}
+<script src="/static/js/admin-settings.js"></script>
+
+<!-- Change Password Section -->
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fas fa-key me-2"></i>Change Password</h3>
+    <hr>
+    <form id="change-password-form">
+        <div class="form-group">
+            <label for="old_password">Current Password</label>
+            <input type="password" class="form-control" id="old_password" name="old_password"
+                placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password"
+                placeholder="Enter new password" required>
+            <small class="form-text text-muted">At least 8 characters with uppercase, lowercase, and
+                digit</small>
+        </div>
+
+        <div class="form-group">
+            <label for="new_password_confirm">Confirm New Password</label>
+            <input type="password" class="form-control" id="new_password_confirm"
+                name="new_password_confirm" placeholder="Re-enter new password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="new_password_hint">New Password Hint (Optional)</label>
+            <input type="text" class="form-control" id="new_password_hint" name="new_password_hint"
+                placeholder="Enter a hint for your new password">
+            <small class="form-text text-muted">Max 255 characters</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary"><i class="fas fa-key me-2"></i>Change Password</button>
+    </form>
+</div>
+
+<!-- API Token Management Section -->
+<div class="container p-4 mb-4 border rounded bg-light">
+    <h3><i class="fas fa-coins me-2"></i>API Token Management</h3>
+    <hr>
+
+    <!-- Create Token Form -->
+    <div class="mb-4">
+        <h4>Create New API Token</h4>
+        <form id="create-token-form">
+            <div class="form-group">
+                <label for="tokenName">Token Name</label>
+                <input type="text" class="form-control" id="tokenName" name="tokenName"
+                    placeholder="e.g., Production API, Mobile App" required maxlength="100">
+                <small class="form-text text-muted">A descriptive name to identify this token</small>
+            </div>
+            <div class="form-group">
+                <label for="expiresInDays">Expiration (Days)</label>
+                <input type="number" class="form-control" id="expiresInDays" name="expiresInDays"
+                    placeholder="0 for never" min="0" value="30">
+                <small class="form-text text-muted">0 means the token never expires</small>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Create Token</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <!-- Tokens List -->
+    <h4>API Tokens</h4>
+    <div id="tokens-container">
+        <p class="text-muted">Loading tokens...</p>
+    </div>
+</div>
+{{end}}
