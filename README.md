@@ -77,6 +77,8 @@ docker compose up -d
 
 The app will be available at `http://localhost:8080`. On first visit you'll be prompted to set up an admin password.
 
+**⚠️ Important:** Remember to configure port forwarding on your router to forward UDP port 51820 (or whichever ports you're using for WireGuard) to your Docker host's IP address. Without proper port forwarding, external clients won't be able to connect to your VPN.
+
 ### Web UI
 
 nullGuard provides a web interface for managing WireGuard servers and clients:
