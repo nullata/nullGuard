@@ -1,0 +1,79 @@
+name: Update Docker Hub README
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/README.dockerhub.md'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update Docker Hub Description
+        env:
+          DOCKERHUB_USERNAME: nullata
+          DOCKERHUB_REPO: nullguard
+          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_TOKEN }}
+          SHORT_DESCRIPTION: "Nullguard container image"
+        run: |
+          set -euo pipefail
+
+          DOCKERHUB_API="https://hub.docker.com/v2"
+          README_FILE="docs/README.dockerhub.md"
+
+          # Sanity checks
+          if [[ ! -f "$README_FILE" ]]; then
+            echo "❌ README file not found: $README_FILE"
+            exit 1
+          fi
+
+          # Login & get JWT token
+          echo "🔐 Logging into Docker Hub..."
+
+          TOKEN=$(curl -s -X POST "$DOCKERHUB_API/users/login/" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"username\": \"$DOCKERHUB_USERNAME\",
+              \"password\": \"$DOCKERHUB_PASSWORD\"
+            }" | jq -r .token)
+
+          if [[ -z "$TOKEN" || "$TOKEN" == "null" ]]; then
+            echo "❌ Failed to obtain Docker Hub token"
+            exit 1
+          fi
+
+          echo "✅ Authenticated"
+
+          # Update README + description
+          echo "📝 Updating Docker Hub repository description..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X PATCH \
+            "$DOCKERHUB_API/repositories/$DOCKERHUB_USERNAME/$DOCKERHUB_REPO/" \
+            -H "Authorization: JWT $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"description\": \"$SHORT_DESCRIPTION\",
+              \"full_description\": \"$(sed 's/\"/\\\"/g' "$README_FILE" | sed ':a;N;$!ba;s/\n/\\n/g')\"
+            }")
+
+          # Split body and HTTP status
+          HTTP_CODE=$(printf "%s" "$RESPONSE" | tail -n1)
+          BODY=$(printf "%s" "$RESPONSE" | sed '$d')
+
+          echo "🎯 Docker Hub response HTTP status: $HTTP_CODE"
+          echo "📦 Response body:"
+          printf "%s\n" "$BODY"
+
+          if [[ "$HTTP_CODE" =~ ^2 ]]; then
+            echo "🎉 Docker Hub README updated successfully"
+          else
+            echo "❌ Failed to update Docker Hub (status: $HTTP_CODE)"
+            exit 1
+          fi
