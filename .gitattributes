@@ -1,0 +1,6 @@
+# Default to LF for all files
+* text=auto eol=lf
+
+# Override for .cmd and .bat files to use CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf

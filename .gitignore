@@ -1,0 +1,19 @@
+# Environment files
+.env
+
+# Build outputs
+nullguard
+*.exe
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+dist/
