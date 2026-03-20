@@ -12,7 +12,7 @@
     {{end}}
     <form id="create-server-form">
         <div class="form-group">
-            <label for="interfaceName">Interface Name</label>
+            <label for="interfaceName">Interface Name{{template "tooltip" "Name of the WireGuard network interface (e.g. wg0). Must be unique on the host."}}</label>
             <input type="text" class="form-control" id="interfaceName" name="interfaceName"
                 value="{{.DefaultServer.InterfaceName}}" required>
         </div>
@@ -21,30 +21,30 @@
             <input type="text" class="form-control" id="comment" name="comment" value="{{.DefaultServer.Comment}}">
         </div>
         <div class="form-group">
-            <label for="address">Address CIDR</label>
+            <label for="address">Address CIDR{{template "tooltip" "The server's VPN IP address and subnet in CIDR notation (e.g. 10.0.0.1/24). Defines the VPN network range."}}</label>
             <input type="text" class="form-control" id="address" name="address" value="{{.DefaultServer.Address}}"
                 required>
         </div>
         <div class="form-group">
-            <label for="port">Port</label>
+            <label for="port">Port{{template "tooltip" "UDP port WireGuard will listen on (e.g. 51820). Must be open and forwarded on your router."}}</label>
             <input type="number" class="form-control" id="port" name="port" value="{{.DefaultServer.Port}}" required>
         </div>
         <div class="form-group">
-            <label for="publicKey">Public Key</label>
+            <label for="publicKey">Public Key{{template "tooltip" "Server's WireGuard public key. Auto-generated if left empty."}}</label>
             <input type="text" class="form-control" id="publicKey" name="publicKey" value="{{.DefaultServer.PublicKey}}"
                 disabled required>
         </div>
         <div class="form-group">
-            <label for="privateKey">Private Key</label>
+            <label for="privateKey">Private Key{{template "tooltip" "Server's WireGuard private key. Auto-generated if left empty. Keep this secret."}}</label>
             <input type="text" class="form-control" id="privateKey" name="privateKey"
                 value="{{.DefaultServer.PrivateKey}}" disabled required>
         </div>
         <div class="form-group">
-            <label for="postUp">Post Up</label>
+            <label for="postUp">Post Up{{template "tooltip" "Shell commands to run after the WireGuard interface comes up. Commonly used for iptables NAT/forwarding rules."}}</label>
             <textarea class="form-control" id="postUp" name="postUp" rows="3">{{.DefaultServer.PostUp}}</textarea>
         </div>
         <div class="form-group">
-            <label for="postDown">Post Down</label>
+            <label for="postDown">Post Down{{template "tooltip" "Shell commands to run after the WireGuard interface goes down. Usually reverses the Post Up rules."}}</label>
             <textarea class="form-control" id="postDown" name="postDown" rows="3">{{.DefaultServer.PostDown}}</textarea>
         </div>
         <div>&nbsp;</div>
@@ -52,17 +52,17 @@
         <h5>Default Client Configurations</h5>
         <hr>
         <div class="form-group">
-            <label for="wanAddress">WAN Address</label>
+            <label for="wanAddress">WAN Address{{template "tooltip" "Your public IP or domain name that clients will use to connect to this server."}}</label>
             <input type="text" class="form-control" id="wanAddress" name="wanAddress"
                 value="{{.DefaultServer.WANAddress}}" required>
         </div>
         <div class="form-group">
-            <label for="supernetCidr">Default Client Supernet CIDR</label>
+            <label for="supernetCidr">Default Client Supernet CIDR{{template "tooltip" "A broader CIDR range for client Allowed IPs, enabling routing across multiple VPN subnets. Leave empty to use the server's subnet."}}</label>
             <input type="text" class="form-control" id="supernetCidr" name="supernetCidr"
                 value="{{.DefaultServer.SupernetCidr}}">
         </div>
         <div class="form-group">
-            <label for="defaultKeepAlive">Default Client Keep Alive</label>
+            <label for="defaultKeepAlive">Default Client Keep Alive{{template "tooltip" "Default persistent keepalive interval (0-600 seconds) for new clients. Helps maintain connections behind NAT."}}</label>
             <input type="number" class="form-control" id="defaultKeepAlive" name="defaultKeepAlive"
                 value="{{.DefaultServer.DefaultKeepalive}}">
         </div>

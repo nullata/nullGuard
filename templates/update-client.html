@@ -17,37 +17,28 @@
     <hr>
     <form id="update-client-form">
         <div class="form-group">
-            <label for="name">Client Name</label>
+            <label for="name">Client Name{{template "tooltip" "A friendly name for this client (e.g. my-laptop). Alphanumeric, dots, dashes, and underscores only."}}</label>
             <input type="text" class="form-control" id="name" name="name" value="{{.ClientData.Name}}" required>
         </div>
         <div class="form-group">
-            <label for="publicKey">Public Key</label>
+            <label for="publicKey">Public Key{{template "tooltip" "Client's WireGuard public key. Auto-generated when creating a new client."}}</label>
             <input type="text" class="form-control" id="publicKey" name="publicKey" value="{{.ClientData.PublicKey}}"
                 disabled required>
         </div>
         <div class="form-group">
-            <label for="privateKey">Private Key</label>
+            <label for="privateKey">Private Key{{template "tooltip" "Client's WireGuard private key. Auto-generated when creating a new client. Keep this secret."}}</label>
             <input type="text" class="form-control" id="privateKey" name="privateKey" value="{{.ClientData.PrivateKey}}"
                 disabled required>
         </div>
         <div class="form-group">
-            <label for="address">Client IP Address CIDR</label>
+            <label for="address">Client IP Address CIDR{{template "tooltip" "The client's VPN IP address in CIDR notation (e.g. 10.0.0.2/32). Auto-assigned from the server's subnet if left empty."}}</label>
             <input type="text" class="form-control" id="address" name="address" value="{{.ClientData.AddressCidr}}"
                 required>
         </div>
         <div class="form-group">
-            <label for="allowedIps">Allowed IPs</label>
+            <label for="allowedIps">Allowed IPs{{template "tooltip" "IP ranges this client is allowed to access through the VPN. Derived from the server's subnet if left empty. Enable Full Tunnel to route all traffic through the VPN (0.0.0.0/0)."}}</label>
             <input type="text" class="form-control" id="allowedIps" name="allowedIps" value="{{.ClientData.AllowedIps}}"
                 required>
-        </div>
-        <div class="form-group">
-            <label for="dnsServers">DNS Servers</label>
-            <input type="text" class="form-control" id="dnsServers" name="dnsServers" value="{{.ClientData.DnsServers}}"
-                placeholder="e.g. 8.8.8.8, 1.1.1.1">
-        </div>
-        <div class="form-group form-check">
-            <input type="checkbox" class="form-check-input" id="useServerDns">
-            <label class="form-check-label" for="useServerDns">Use Server DNS</label>
         </div>
         <div class="form-group form-check">
             {{if .ClientData.FullTunnel}}
@@ -58,7 +49,16 @@
             <label class="form-check-label" for="fullTunnel">Full Tunnel</label>
         </div>
         <div class="form-group">
-            <label for="keepalive">Keepalive</label>
+            <label for="dnsServers">DNS Servers{{template "tooltip" "DNS servers the client will use when connected. Comma-separated, max 2 (e.g. 8.8.8.8, 1.1.1.1). Leave empty for no DNS override."}}</label>
+            <input type="text" class="form-control" id="dnsServers" name="dnsServers" value="{{.ClientData.DnsServers}}"
+                placeholder="e.g. 8.8.8.8, 1.1.1.1">
+        </div>
+        <div class="form-group form-check">
+            <input type="checkbox" class="form-check-input" id="useServerDns">
+            <label class="form-check-label" for="useServerDns">Use Server DNS</label>
+        </div>
+        <div class="form-group">
+            <label for="keepalive">Keepalive{{template "tooltip" "Persistent keepalive interval in seconds (0-600). Sends periodic packets to keep the connection alive behind NAT/firewalls."}}</label>
             <input type="number" class="form-control" id="keepalive" name="keepalive" value="{{.ClientData.Keepalive}}"
                 required>
         </div>

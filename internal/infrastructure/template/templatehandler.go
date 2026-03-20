@@ -22,6 +22,7 @@ func InitializeBaseTemplates() {
 		"templates/partials/header.html",
 		"templates/partials/footer.html",
 		"templates/partials/modal.html",
+		"templates/partials/tooltip.html",
 	))
 	log.Println("Base templates initialized")
 }
