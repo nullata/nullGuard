@@ -17,14 +17,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetClientConfig returns the WireGuard configuration file for a client
-func GetClientConfig(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		httputil.SendJSONResponse(w, http.StatusMethodNotAllowed, constants.StatusError, "Method not allowed", nil)
-		return
-	}
-
-	// get client id and server id from url parameters
+// getClientFromRequest parses clientId/serverId from URL vars and fetches the client.
+// Returns the client and true on success, or sends an error response and returns false.
+func getClientFromRequest(w http.ResponseWriter, r *http.Request) (domain.Client, bool) {
 	vars := mux.Vars(r)
 	clientIDStr := vars["clientId"]
 	serverIDStr := vars["serverId"]
@@ -33,17 +28,16 @@ func GetClientConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Invalid client ID: %v", err)
 		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid client ID", nil)
-		return
+		return domain.Client{}, false
 	}
 
 	serverID, err := strconv.ParseUint(serverIDStr, 10, 32)
 	if err != nil {
 		log.Printf("Invalid server ID: %v", err)
 		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid server ID", nil)
-		return
+		return domain.Client{}, false
 	}
 
-	// fetch the client
 	client, err := clientservice.GetClientByIDAndServerID(domain.Client{
 		ID:       uint(clientID),
 		ServerID: uint(serverID),
@@ -51,6 +45,21 @@ func GetClientConfig(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error fetching client: %v", err)
 		httputil.SendJSONResponse(w, http.StatusNotFound, constants.StatusError, "Client not found", nil)
+		return domain.Client{}, false
+	}
+
+	return client, true
+}
+
+// GetClientConfig returns the WireGuard configuration file for a client
+func GetClientConfig(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		httputil.SendJSONResponse(w, http.StatusMethodNotAllowed, constants.StatusError, "Method not allowed", nil)
+		return
+	}
+
+	client, ok := getClientFromRequest(w, r)
+	if !ok {
 		return
 	}
 
@@ -80,33 +89,8 @@ func GetClientQRCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get client id and server id from url parameters
-	vars := mux.Vars(r)
-	clientIDStr := vars["clientId"]
-	serverIDStr := vars["serverId"]
-
-	clientID, err := strconv.ParseUint(clientIDStr, 10, 32)
-	if err != nil {
-		log.Printf("Invalid client ID: %v", err)
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid client ID", nil)
-		return
-	}
-
-	serverID, err := strconv.ParseUint(serverIDStr, 10, 32)
-	if err != nil {
-		log.Printf("Invalid server ID: %v", err)
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid server ID", nil)
-		return
-	}
-
-	// fetch the client
-	client, err := clientservice.GetClientByIDAndServerID(domain.Client{
-		ID:       uint(clientID),
-		ServerID: uint(serverID),
-	})
-	if err != nil {
-		log.Printf("Error fetching client: %v", err)
-		httputil.SendJSONResponse(w, http.StatusNotFound, constants.StatusError, "Client not found", nil)
+	client, ok := getClientFromRequest(w, r)
+	if !ok {
 		return
 	}
 
@@ -129,40 +113,15 @@ func GetClientQRCode(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// DownloadClientConfig returns a zip file containing the client configuration
+// DownloadClientConfig returns a zip file containing the client configuration and QR code
 func DownloadClientConfig(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		httputil.SendJSONResponse(w, http.StatusMethodNotAllowed, constants.StatusError, "Method not allowed", nil)
 		return
 	}
 
-	// get client id and server id from url parameters
-	vars := mux.Vars(r)
-	clientIDStr := vars["clientId"]
-	serverIDStr := vars["serverId"]
-
-	clientID, err := strconv.ParseUint(clientIDStr, 10, 32)
-	if err != nil {
-		log.Printf("Invalid client ID: %v", err)
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid client ID", nil)
-		return
-	}
-
-	serverID, err := strconv.ParseUint(serverIDStr, 10, 32)
-	if err != nil {
-		log.Printf("Invalid server ID: %v", err)
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Invalid server ID", nil)
-		return
-	}
-
-	// fetch the client
-	client, err := clientservice.GetClientByIDAndServerID(domain.Client{
-		ID:       uint(clientID),
-		ServerID: uint(serverID),
-	})
-	if err != nil {
-		log.Printf("Error fetching client: %v", err)
-		httputil.SendJSONResponse(w, http.StatusNotFound, constants.StatusError, "Client not found", nil)
+	client, ok := getClientFromRequest(w, r)
+	if !ok {
 		return
 	}
 

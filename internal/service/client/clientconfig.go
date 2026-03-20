@@ -59,7 +59,11 @@ func GenerateQRCode(client domain.Client) ([]byte, error) {
 		return nil, fmt.Errorf("Failed to generate config: %w", err)
 	}
 
-	// generate qr code at medium recovery level, 256x256 pixels
+	return generateQRCodeFromConfig(config)
+}
+
+// generateQRCodeFromConfig encodes a config string as a QR code PNG image
+func generateQRCodeFromConfig(config string) ([]byte, error) {
 	qrCode, err := qrcode.Encode(config, qrcode.Medium, 256)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to generate QR code: %w", err)
@@ -90,6 +94,23 @@ func CreateConfigZip(client domain.Client) ([]byte, string, error) {
 	_, err = fileWriter.Write([]byte(config))
 	if err != nil {
 		return nil, "", fmt.Errorf("Failed to write config to zip: %w", err)
+	}
+
+	// generate and add the QR code PNG
+	qrCode, err := generateQRCodeFromConfig(config)
+	if err != nil {
+		return nil, "", fmt.Errorf("Failed to generate QR code: %w", err)
+	}
+
+	qrFileName := fmt.Sprintf("%s-qr.png", client.Name)
+	qrWriter, err := zipWriter.Create(qrFileName)
+	if err != nil {
+		return nil, "", fmt.Errorf("Failed to create QR code zip entry: %w", err)
+	}
+
+	_, err = qrWriter.Write(qrCode)
+	if err != nil {
+		return nil, "", fmt.Errorf("Failed to write QR code to zip: %w", err)
 	}
 
 	// close the zip writer
