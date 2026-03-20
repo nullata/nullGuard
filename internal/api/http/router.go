@@ -103,6 +103,7 @@ func SetupRouter() *mux.Router {
 	protected.HandleFunc("/api/v1/deploy-server", servercontroller.DeployServer).Methods("POST")
 	protected.HandleFunc("/api/v1/stop-server", servercontroller.StopServer).Methods("POST")
 	protected.HandleFunc("/api/v1/restart-server", servercontroller.RestartServer).Methods("POST")
+	protected.HandleFunc("/api/v1/toggle-auto-restart", servercontroller.ToggleAutoRestart).Methods("POST")
 
 	// wg client
 	protected.HandleFunc("/client", clientcontroller.ClientPageHandler).Methods("GET")
