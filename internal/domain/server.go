@@ -17,7 +17,7 @@ type Server struct {
 	WANAddress       string  `gorm:"type:varchar(100);not null"`
 	SupernetCidr     *string `gorm:"type:varchar(100)"`
 	DefaultKeepalive *int    `gorm:"type:int"`
-	AutoRestart      bool   `gorm:"default:false"`
+	AutoRestart      bool    `gorm:"default:false"`
 }
 
 func (Server) TableName() string {

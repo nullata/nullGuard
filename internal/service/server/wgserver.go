@@ -50,7 +50,7 @@ func CreateServer(server domain.Server) error {
 }
 
 func buildServerObj(interfaceName, comment, address, publicKey, privateKey,
-	postUp, postDown, wanAddress, supernetCidr string, id *int, port int, defaultKeepAlive *int) domain.Server {
+	postUp, postDown, wanAddress, supernetCidr string, id *int, port int, defaultKeepAlive *int, autoRestart bool) domain.Server {
 
 	// pointers for optional fields like PostUp, PostDown, and SupernetCIDR
 	var postUpPtr, postDownPtr, supernetCidrPtr *string
@@ -76,6 +76,7 @@ func buildServerObj(interfaceName, comment, address, publicKey, privateKey,
 		WANAddress:       wanAddress,
 		SupernetCidr:     supernetCidrPtr,
 		DefaultKeepalive: defaultKeepAlive, // use a pointer for DefaultKeepAlive if its not zero (or if zero is valid - just assign directly)
+		AutoRestart:      autoRestart,
 	}
 
 	// if the ID is provided and valid, set it; otherwise, let the DB generate it
@@ -113,7 +114,7 @@ func ConvertRawToServer(rawData models.RawServerData) (domain.Server, error) {
 
 	return buildServerObj(rawData.InterfaceName, rawData.Comment, rawData.Address,
 		rawData.PublicKey, rawData.PrivateKey, rawData.PostUp, rawData.PostDown,
-		rawData.WANAddress, rawData.SupernetCIDR, idPtr, int(port), keepAlive), nil
+		rawData.WANAddress, rawData.SupernetCIDR, idPtr, int(port), keepAlive, rawData.AutoRestart), nil
 }
 
 func BuildNewServerConf(port int, address string) (domain.Server, error) {
@@ -144,7 +145,7 @@ func BuildNewServerConf(port int, address string) (domain.Server, error) {
 	}
 
 	return buildServerObj(defaultName, defaultComment, address, publicKey, privateKey, defaultPostUp,
-		defaultPostDown, wanAddress, defaultSupernetCidr, nil, port, &defaultKeepAlive), nil
+		defaultPostDown, wanAddress, defaultSupernetCidr, nil, port, &defaultKeepAlive, false), nil
 }
 
 func BuildDefaultServerConf() (domain.Server, error) {
@@ -177,7 +178,7 @@ func BuildDefaultServerConf() (domain.Server, error) {
 	}
 
 	return buildServerObj(defaultName, defaultComment, defaultAddress, publicKey, privateKey, defaultPostUp,
-		defaultPostDown, wanAddress, defaultSupernetCidr, nil, defaultPort, &defaultKeepAlive), nil
+		defaultPostDown, wanAddress, defaultSupernetCidr, nil, defaultPort, &defaultKeepAlive, false), nil
 }
 
 func Validate(server *domain.Server) error {
@@ -298,6 +299,7 @@ func UpdateServer(oldServer *domain.Server, newServer domain.Server) error {
 	database.UpdateFieldIfChanged(&oldServer.WANAddress, newServer.WANAddress)
 	database.UpdatePointerFieldIfChanged(&oldServer.SupernetCidr, newServer.SupernetCidr)
 	database.UpdatePointerFieldIfChanged(&oldServer.DefaultKeepalive, newServer.DefaultKeepalive)
+	database.UpdateFieldIfChanged(&oldServer.AutoRestart, newServer.AutoRestart)
 
 	// save the updated object via repository
 	return repository.UpdateServer(oldServer)

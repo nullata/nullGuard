@@ -12,6 +12,7 @@ import (
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
 	clientservice "nullguard/internal/service/client"
+	serverservice "nullguard/internal/service/server"
 )
 
 // DeleteClient deletes a WireGuard client
@@ -40,6 +41,8 @@ func DeleteClient(w http.ResponseWriter, r *http.Request) {
 		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "There was a problem deleting the client", nil)
 		return
 	}
+
+	go serverservice.AutoRestartIfEnabled(int(client.ServerID))
 
 	httputil.SendJSONResponse(w, http.StatusOK, constants.StatusSuccess, "Success", nil)
 }

@@ -357,6 +357,53 @@ func AutoStartServers() {
 	}
 }
 
+// SetAutoRestart updates the auto-restart flag for a server
+func SetAutoRestart(serverID int, enabled bool) error {
+	server, err := GetServerByID(serverID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch server: %w", err)
+	}
+	server.AutoRestart = enabled
+	return repository.UpdateServer(&server)
+}
+
+// AutoRestartIfEnabled checks if a server has auto-restart enabled and is active,
+// and if so, restarts it. Errors are logged but not returned since this is a
+// best-effort operation that should not block the caller.
+func AutoRestartIfEnabled(serverID int) {
+	server, err := GetServerByID(serverID)
+	if err != nil {
+		log.Printf("Auto-restart: failed to fetch server %d: %v", serverID, err)
+		return
+	}
+
+	if !server.AutoRestart {
+		return
+	}
+
+	isActive, err := IsServerActive(server)
+	if err != nil || !isActive {
+		return
+	}
+
+	if err := StopServer(server); err != nil {
+		log.Printf("Auto-restart: failed to stop server %s: %v", server.InterfaceName, err)
+		return
+	}
+
+	if err := GenerateServerConfig(server); err != nil {
+		log.Printf("Auto-restart: failed to generate config for %s: %v", server.InterfaceName, err)
+		return
+	}
+
+	if err := StartServer(server); err != nil {
+		log.Printf("Auto-restart: failed to start server %s: %v", server.InterfaceName, err)
+		return
+	}
+
+	log.Printf("Auto-restart: restarted %s", server.InterfaceName)
+}
+
 func StartServer(server domain.Server) error {
 	serverConfigPath := config.GetEnv("WG_SERVER_CONF_PATH", "./")
 	if string(serverConfigPath[len(serverConfigPath)-1]) != "/" {

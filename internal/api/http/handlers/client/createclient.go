@@ -112,6 +112,8 @@ func CreateClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	go serverservice.AutoRestartIfEnabled(*serverID)
+
 	httputil.SendJSONResponse(w, http.StatusOK, constants.StatusSuccess, "Client created", map[string]string{
 		"config": configContent,
 	})

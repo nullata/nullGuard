@@ -12,6 +12,7 @@ import (
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
 	clientservice "nullguard/internal/service/client"
+	serverservice "nullguard/internal/service/server"
 )
 
 func UpdateClient(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +47,8 @@ func UpdateClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clientservice.ClearClientSessionData(w, r)
+
+	go serverservice.AutoRestartIfEnabled(int(newClient.ServerID))
 
 	httputil.SendJSONResponse(w, http.StatusOK, constants.StatusSuccess, "Client updated. Changes will be applied after the server is restarted", nil)
 }
