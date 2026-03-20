@@ -60,6 +60,9 @@ $(document).ready(function () {
             defaultKeepAlive: response.data.DefaultKeepalive,
           };
 
+          // set auto-restart toggle state
+          $("#autoRestart").prop("checked", response.data.AutoRestart);
+
           // adjust height on page load for all matching textareas
           adjustTextareaHeight($("#postUp")[0]);
           adjustTextareaHeight($("#postDown")[0]);
@@ -97,6 +100,24 @@ $(document).ready(function () {
   if (initialServerId) {
     loadServerData(initialServerId); // fetch data on initial page load
   }
+
+  // toggle auto-restart setting
+  $("#autoRestart").change(function () {
+    var serverId = $("#serverSelect").val();
+    if (!serverId) return;
+    $.ajax({
+      url: "/api/v1/toggle-auto-restart",
+      method: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({
+        serverId: serverId,
+        autoRestart: $(this).is(":checked"),
+      }),
+      error: function (xhr, status) {
+        defaultModalError("Toggle auto-restart", xhr, status);
+      },
+    });
+  });
 
   setInterval(refreshServerStatus, 30000); // refresh server status every 30 seconds
 
