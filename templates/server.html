@@ -8,13 +8,13 @@
     <hr>
     <div id="server-select-form" class="mb-3">
         <label for="serverSelect" class="mb-2">Select Server</label>
-        <div class="d-flex justify-content-between align-items-center">
-            <select id="serverSelect" class="form-control" name="serverSelect" style="width: 360px;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <select id="serverSelect" class="form-control" name="serverSelect" style="width: 360px; max-width: 100%;">
                 {{range .Servers}}
                 <option value="{{.ID}}">{{.InterfaceName}}({{.Address}})</option>
                 {{end}}
             </select>
-            <a href="/create-server" class="btn btn-secondary"><i class="fas fa-plus me-2"></i>Add Server</a>
+            <a href="/create-server" class="btn btn-secondary text-nowrap"><i class="fas fa-plus me-2"></i>Add Server</a>
         </div>
     </div>
     <div class="d-flex align-items-center">
