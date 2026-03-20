@@ -305,6 +305,7 @@ Content-Type: application/json
     "WANAddress": "vpn.example.com",
     "SupernetCidr": null,
     "DefaultKeepalive": 30,
+    "AutoRestart": false,
     "IsActive": true
   }
 }
@@ -675,6 +676,44 @@ Content-Type: application/json
   "timestamp": "2025-01-01T12:00:00Z",
   "status": "success",
   "message": "Server restarted: wg0",
+  "data": null
+}
+```
+
+---
+
+#### Toggle Auto-Restart
+
+Enables or disables automatic server restart when clients are created, updated, or deleted. When enabled, the server will automatically regenerate its configuration and restart after any client modification (only if the server is currently active).
+
+```
+POST /api/v1/toggle-auto-restart
+Content-Type: application/json
+```
+
+**Request body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `serverId` | number | yes | ID of the server |
+| `autoRestart` | boolean | yes | Enable or disable auto-restart |
+
+**Example:**
+
+```json
+{
+  "serverId": 1,
+  "autoRestart": true
+}
+```
+
+**Response:**
+
+```json
+{
+  "timestamp": "2025-01-01T12:00:00Z",
+  "status": "success",
+  "message": "Auto-restart updated",
   "data": null
 }
 ```

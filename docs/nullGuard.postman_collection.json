@@ -178,6 +178,45 @@
       "response": []
     },
     {
+      "name": "toggle-auto-restart",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "YOUR-API-KEY-HERE",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"autoRestart\": true\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "localhost:8080/api/v1/toggle-auto-restart",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "v1",
+            "toggle-auto-restart"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "health",
       "request": {
         "auth": {
