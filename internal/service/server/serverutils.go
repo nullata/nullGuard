@@ -232,7 +232,7 @@ type PeerStatus struct {
 // A peer is considered connected if its latest WireGuard handshake occurred
 // within 3 minutes. WireGuard peers re-handshake roughly every 2 minutes
 // during an active session, so a 3-minute window accounts for normal jitter.
-// When a peer disconnects, there is no explicit event — the handshake simply
+// When a peer disconnects, there is no explicit event - the handshake simply
 // ages past this threshold and the peer is no longer considered connected.
 // Transfer counters are cumulative since the interface was brought up.
 func GetPeerStatuses(interfaceName string) map[string]PeerStatus {

@@ -48,6 +48,22 @@
             {{end}}
             <label class="form-check-label" for="fullTunnel">Full Tunnel</label>
         </div>
+        {{if .BridgeNetworks}}
+        <div class="form-group">
+            <label class="fw-semibold">Bridge Networks{{template "tooltip" "Adds the selected server-side networks to this client's AllowedIPs. Watch out for overlap with the client's own local network."}}</label>
+            <div id="bridgeNetworksList" class="border rounded p-3 bg-white">
+                {{range $i, $b := .BridgeNetworks}}
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input bridge-network-checkbox" id="bridge-{{$i}}" data-cidr="{{$b.CIDR}}"{{if $b.Checked}} checked{{end}}>
+                    <label class="form-check-label" for="bridge-{{$i}}">{{$b.CIDR}}</label>
+                </div>
+                {{end}}
+            </div>
+            <small class="form-text text-muted d-block mt-2">
+                <strong>Watch out for overlap with the client's own local network.</strong> If a client device is already on one of these networks locally (e.g. its own home Wi-Fi is 192.168.50.0/24), ticking that box will route that subnet through the VPN and the client will lose access to its local devices while connected.
+            </small>
+        </div>
+        {{end}}
         <div class="form-group">
             <label for="dnsServers">DNS Servers{{template "tooltip" "DNS servers the client will use when connected. Comma-separated, max 2 (e.g. 8.8.8.8, 1.1.1.1). Leave empty for no DNS override."}}</label>
             <input type="text" class="form-control" id="dnsServers" name="dnsServers" value="{{.ClientData.DnsServers}}"

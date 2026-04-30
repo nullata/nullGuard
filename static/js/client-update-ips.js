@@ -37,3 +37,30 @@ function updateAllowedIPs() {
   // join values back into a string and set it as the new value
   allowedIpsInput.val(currentValues.join(", "));
 }
+
+// add or remove a single CIDR from the AllowedIps field. used by bridge network checkboxes
+function toggleAllowedIp(cidr, checked) {
+  var allowedIpsInput = $("#allowedIps");
+  var currentValues = allowedIpsInput
+    .val()
+    .split(",")
+    .map(function (item) {
+      return item.trim();
+    })
+    .filter(Boolean);
+
+  cidr = (cidr || "").trim();
+  if (!cidr) return;
+
+  if (checked) {
+    if (!currentValues.includes(cidr)) {
+      currentValues.push(cidr);
+    }
+  } else {
+    currentValues = currentValues.filter(function (item) {
+      return item !== cidr;
+    });
+  }
+
+  allowedIpsInput.val(currentValues.join(", "));
+}

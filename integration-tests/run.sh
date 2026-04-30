@@ -155,9 +155,9 @@ runTest "Fetch server" POST "/api/v1/fetch-server" 200 \
 serverPublicKey=$(echo "${lastResponse}" | jq -r '.data.PublicKey')
 serverPrivateKey=$(echo "${lastResponse}" | jq -r '.data.PrivateKey')
 
-# update server (change comment) - keys required for update
+# update server (change comment + set bridge networks) - keys required for update
 runTest "Update server" PUT "/api/v1/update-server" 200 \
-  "{\"serverId\":${serverId},\"interfaceName\":\"${serverName}\",\"address\":\"10.99.99.1/24\",\"port\":51899,\"publicKey\":\"${serverPublicKey}\",\"privateKey\":\"${serverPrivateKey}\",\"wanAddress\":\"127.0.0.1\",\"comment\":\"updated by integration test\"}"
+  "{\"serverId\":${serverId},\"interfaceName\":\"${serverName}\",\"address\":\"10.99.99.1/24\",\"port\":51899,\"publicKey\":\"${serverPublicKey}\",\"privateKey\":\"${serverPrivateKey}\",\"wanAddress\":\"127.0.0.1\",\"comment\":\"updated by integration test\",\"bridgeNetworks\":\"192.168.50.0/24, 10.10.0.0/16\"}"
 
 # fetch again to verify update
 runTest "Verify server update" POST "/api/v1/fetch-server" 200 \
@@ -171,6 +171,38 @@ if [[ "${updatedComment}" == "updated by integration test" ]]; then
 else
   fail=$((fail + 1))
   echo "  $(red "FAIL") Server comment mismatch: got '${updatedComment}'"
+fi
+
+# verify bridge networks round-trip
+updatedBridges=$(echo "${lastResponse}" | jq -r '.data.BridgeNetworks // empty')
+total=$((total + 1))
+if [[ "${updatedBridges}" == "192.168.50.0/24, 10.10.0.0/16" ]]; then
+  pass=$((pass + 1))
+  echo "  $(green "PASS") Bridge networks set and round-tripped"
+else
+  fail=$((fail + 1))
+  echo "  $(red "FAIL") Bridge networks mismatch: got '${updatedBridges}'"
+fi
+
+# reject invalid CIDRs in bridge networks
+runTest "Reject invalid bridge CIDR" PUT "/api/v1/update-server" 400 \
+  "{\"serverId\":${serverId},\"interfaceName\":\"${serverName}\",\"address\":\"10.99.99.1/24\",\"port\":51899,\"publicKey\":\"${serverPublicKey}\",\"privateKey\":\"${serverPrivateKey}\",\"wanAddress\":\"127.0.0.1\",\"bridgeNetworks\":\"not-a-cidr\"}"
+
+# clear bridge networks (PUT with empty string) - exercises UpdatePointerFieldIfChanged nil-clear path
+runTest "Clear bridge networks" PUT "/api/v1/update-server" 200 \
+  "{\"serverId\":${serverId},\"interfaceName\":\"${serverName}\",\"address\":\"10.99.99.1/24\",\"port\":51899,\"publicKey\":\"${serverPublicKey}\",\"privateKey\":\"${serverPrivateKey}\",\"wanAddress\":\"127.0.0.1\",\"comment\":\"updated by integration test\",\"bridgeNetworks\":\"\"}"
+
+runTest "Verify bridge networks cleared" POST "/api/v1/fetch-server" 200 \
+  "{\"serverId\":${serverId}}"
+
+clearedBridges=$(echo "${lastResponse}" | jq -r '.data.BridgeNetworks // "null"')
+total=$((total + 1))
+if [[ "${clearedBridges}" == "null" || -z "${clearedBridges}" ]]; then
+  pass=$((pass + 1))
+  echo "  $(green "PASS") Bridge networks cleared"
+else
+  fail=$((fail + 1))
+  echo "  $(red "FAIL") Bridge networks not cleared: got '${clearedBridges}'"
 fi
 
 ###############################

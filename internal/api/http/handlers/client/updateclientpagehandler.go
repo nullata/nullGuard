@@ -64,6 +64,12 @@ func SetClientSessionHandler(w http.ResponseWriter, r *http.Request) {
 	session.Values["serverAddress"] = server.Address
 	session.Values["serverSupernet"] = server.SupernetCidr
 
+	bridgeNetworksRaw := ""
+	if server.BridgeNetworks != nil {
+		bridgeNetworksRaw = *server.BridgeNetworks
+	}
+	session.Values["serverBridgeNetworks"] = bridgeNetworksRaw
+
 	if err := session.Save(r, w); err != nil {
 		log.Printf("Error saving session: %v", err)
 		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Could not prepare client for editing. Please try again", nil)
@@ -112,6 +118,9 @@ func UpdateClientPageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	bridgeRaw, _ := session.Values["serverBridgeNetworks"].(string)
+	bridges := buildBridgeCheckboxes(bridgeRaw, clientData.AllowedIps)
+
 	// prepare data for rendering
 	data := map[string]interface{}{
 		"Title":           "nullguard - Update Client",
@@ -119,7 +128,39 @@ func UpdateClientPageHandler(w http.ResponseWriter, r *http.Request) {
 		"ServerInterface": serverInterface,
 		"ServerAddress":   serverAddress,
 		"ServerSupernet":  serverSupernet,
+		"BridgeNetworks":  bridges,
 	}
 
 	template.TemplateHandler(w, "templates/update-client.html", data)
+}
+
+type bridgeCheckbox struct {
+	CIDR    string
+	Checked bool
+}
+
+// buildBridgeCheckboxes returns the bridge network list with each CIDR's checked state
+// derived from whether it currently appears in the client's AllowedIps field.
+func buildBridgeCheckboxes(bridgeRaw, allowedIps string) []bridgeCheckbox {
+	if strings.TrimSpace(bridgeRaw) == "" {
+		return nil
+	}
+
+	active := map[string]bool{}
+	for _, c := range strings.Split(allowedIps, ",") {
+		c = strings.TrimSpace(c)
+		if c != "" {
+			active[c] = true
+		}
+	}
+
+	var out []bridgeCheckbox
+	for _, c := range strings.Split(bridgeRaw, ",") {
+		c = strings.TrimSpace(c)
+		if c == "" {
+			continue
+		}
+		out = append(out, bridgeCheckbox{CIDR: c, Checked: active[c]})
+	}
+	return out
 }

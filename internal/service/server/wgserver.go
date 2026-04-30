@@ -50,10 +50,10 @@ func CreateServer(server domain.Server) error {
 }
 
 func buildServerObj(interfaceName, comment, address, publicKey, privateKey,
-	postUp, postDown, wanAddress, supernetCidr string, id *int, port int, defaultKeepAlive *int, autoRestart bool) domain.Server {
+	postUp, postDown, wanAddress, supernetCidr, bridgeNetworks string, id *int, port int, defaultKeepAlive *int, autoRestart bool) domain.Server {
 
-	// pointers for optional fields like PostUp, PostDown, and SupernetCIDR
-	var postUpPtr, postDownPtr, supernetCidrPtr *string
+	// pointers for optional fields like PostUp, PostDown, SupernetCIDR, and BridgeNetworks
+	var postUpPtr, postDownPtr, supernetCidrPtr, bridgeNetworksPtr *string
 	if postUp != "" {
 		postUpPtr = &postUp
 	}
@@ -62,6 +62,9 @@ func buildServerObj(interfaceName, comment, address, publicKey, privateKey,
 	}
 	if supernetCidr != "" {
 		supernetCidrPtr = &supernetCidr
+	}
+	if bridgeNetworks != "" {
+		bridgeNetworksPtr = &bridgeNetworks
 	}
 
 	server := domain.Server{
@@ -75,6 +78,7 @@ func buildServerObj(interfaceName, comment, address, publicKey, privateKey,
 		PostDown:         postDownPtr,
 		WANAddress:       wanAddress,
 		SupernetCidr:     supernetCidrPtr,
+		BridgeNetworks:   bridgeNetworksPtr,
 		DefaultKeepalive: defaultKeepAlive, // use a pointer for DefaultKeepAlive if its not zero (or if zero is valid - just assign directly)
 		AutoRestart:      autoRestart,
 	}
@@ -114,7 +118,7 @@ func ConvertRawToServer(rawData models.RawServerData) (domain.Server, error) {
 
 	return buildServerObj(rawData.InterfaceName, rawData.Comment, rawData.Address,
 		rawData.PublicKey, rawData.PrivateKey, rawData.PostUp, rawData.PostDown,
-		rawData.WANAddress, rawData.SupernetCIDR, idPtr, int(port), keepAlive, rawData.AutoRestart), nil
+		rawData.WANAddress, rawData.SupernetCIDR, rawData.BridgeNetworks, idPtr, int(port), keepAlive, rawData.AutoRestart), nil
 }
 
 func BuildNewServerConf(port int, address string) (domain.Server, error) {
@@ -145,7 +149,7 @@ func BuildNewServerConf(port int, address string) (domain.Server, error) {
 	}
 
 	return buildServerObj(defaultName, defaultComment, address, publicKey, privateKey, defaultPostUp,
-		defaultPostDown, wanAddress, defaultSupernetCidr, nil, port, &defaultKeepAlive, false), nil
+		defaultPostDown, wanAddress, defaultSupernetCidr, "", nil, port, &defaultKeepAlive, false), nil
 }
 
 func BuildDefaultServerConf() (domain.Server, error) {
@@ -178,7 +182,7 @@ func BuildDefaultServerConf() (domain.Server, error) {
 	}
 
 	return buildServerObj(defaultName, defaultComment, defaultAddress, publicKey, privateKey, defaultPostUp,
-		defaultPostDown, wanAddress, defaultSupernetCidr, nil, defaultPort, &defaultKeepAlive, false), nil
+		defaultPostDown, wanAddress, defaultSupernetCidr, "", nil, defaultPort, &defaultKeepAlive, false), nil
 }
 
 func Validate(server *domain.Server) error {
@@ -228,6 +232,15 @@ func Validate(server *domain.Server) error {
 		superNetCIDRs := strings.Split(*server.SupernetCidr, ",")
 		for i := range superNetCIDRs {
 			if _, err := validation.ValidateCIDR(strings.TrimSpace(superNetCIDRs[i])); err != nil {
+				return err
+			}
+		}
+	}
+
+	if server.BridgeNetworks != nil && *server.BridgeNetworks != "" {
+		bridgeCIDRs := strings.Split(*server.BridgeNetworks, ",")
+		for i := range bridgeCIDRs {
+			if _, err := validation.ValidateCIDR(strings.TrimSpace(bridgeCIDRs[i])); err != nil {
 				return err
 			}
 		}
@@ -298,6 +311,7 @@ func UpdateServer(oldServer *domain.Server, newServer domain.Server) error {
 	database.UpdatePointerFieldIfChanged(&oldServer.PostDown, newServer.PostDown)
 	database.UpdateFieldIfChanged(&oldServer.WANAddress, newServer.WANAddress)
 	database.UpdatePointerFieldIfChanged(&oldServer.SupernetCidr, newServer.SupernetCidr)
+	database.UpdatePointerFieldIfChanged(&oldServer.BridgeNetworks, newServer.BridgeNetworks)
 	database.UpdatePointerFieldIfChanged(&oldServer.DefaultKeepalive, newServer.DefaultKeepalive)
 	database.UpdateFieldIfChanged(&oldServer.AutoRestart, newServer.AutoRestart)
 

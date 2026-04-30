@@ -98,6 +98,16 @@ func BuildClient(w http.ResponseWriter, r *http.Request) {
 		supernetCidr = *server.SupernetCidr
 	}
 
+	bridgeNetworks := []string{}
+	if server.BridgeNetworks != nil && strings.TrimSpace(*server.BridgeNetworks) != "" {
+		for _, c := range strings.Split(*server.BridgeNetworks, ",") {
+			c = strings.TrimSpace(c)
+			if c != "" {
+				bridgeNetworks = append(bridgeNetworks, c)
+			}
+		}
+	}
+
 	serverDns := strings.Split(server.Address, "/")[0]
 
 	clientData := models.RawClientData{
@@ -108,8 +118,9 @@ func BuildClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	responseData := map[string]interface{}{
-		"clientData": clientData,
-		"serverDns":  serverDns,
+		"clientData":     clientData,
+		"serverDns":      serverDns,
+		"bridgeNetworks": bridgeNetworks,
 	}
 
 	httputil.SendJSONResponse(w, http.StatusOK, constants.StatusSuccess, "Success", responseData)

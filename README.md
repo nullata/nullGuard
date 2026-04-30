@@ -176,6 +176,8 @@ nullGuard manages WireGuard configurations through a server-client model:
 
 **Authentication for destructive operations**: Endpoints that deploy, stop, restart, or delete servers require both `serverId` and the server's `interfaceName` for verification. This prevents accidental operations on the wrong server.
 
+**Bridge networks**: Each server can declare a list of reachable server-side LANs (the `bridgeNetworks` field). When creating or editing a client, those CIDRs render as checkboxes in the web UI - ticking one appends it to that client's `AllowedIPs`, unticking removes it. Use this to grant individual clients access to LANs behind the server (e.g. a home subnet at `192.168.50.0/24`) without hand-editing the WireGuard config. Watch out for clients whose own local network overlaps a checked CIDR - that LAN gets routed through the VPN and the client loses local access while connected.
+
 ---
 
 ## API
@@ -252,6 +254,7 @@ Content-Type: application/json
 | `postDown` | string | no | PostDown iptables rules |
 | `wanAddress` | string | yes | Public IP or domain for clients to connect to |
 | `supernetCidr` | string | no | Supernet CIDR for routing |
+| `bridgeNetworks` | string | no | Comma-separated CIDRs for server-side LANs that clients may bridge into. Each entry becomes a checkbox on the client form (e.g. `"192.168.50.0/24, 10.10.0.0/16"`). |
 | `defaultKeepAlive` | number | no | Default keepalive for clients (0-600 seconds, default: 30) |
 | `comment` | string | no | Server description/comment |
 
@@ -323,6 +326,8 @@ Content-Type: application/json
 ```
 
 **Request body:** Same fields as Create Server, plus `serverId` field.
+
+> **Note:** Submitting an optional field as an empty string (or omitting it from the body) will **clear** the stored value. This applies to `postUp`, `postDown`, `supernetCidr`, `bridgeNetworks`, and `defaultKeepAlive`. Always include the fields you want preserved.
 
 **Response:**
 
@@ -765,6 +770,7 @@ The test suite covers:
 - Server CRUD operations (create, list, fetch, update, delete)
 - Server lifecycle (deploy/start, restart, stop)
 - Client CRUD operations (create, list, config/QR/download, delete)
+- Bridge networks set/round-trip/clear and CIDR validation
 - Error cases (authentication, validation, not found)
 
 See [integration-tests/run.sh](integration-tests/run.sh) for implementation details.

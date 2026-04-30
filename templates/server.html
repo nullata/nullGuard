@@ -91,6 +91,10 @@
                 <input type="text" class="form-control" id="supernetCidr" name="supernetCidr" value="">
             </div>
             <div class="form-group">
+                <label for="bridgeNetworks">Bridge Networks{{template "tooltip" "Server-side LANs that clients may bridge into through this VPN. Comma-separated CIDRs (e.g. 192.168.50.0/24, 10.10.0.0/16). Each entry becomes a checkbox on the client form."}}</label>
+                <input type="text" class="form-control" id="bridgeNetworks" name="bridgeNetworks" value="" placeholder="192.168.50.0/24, 10.10.0.0/16">
+            </div>
+            <div class="form-group">
                 <label for="defaultKeepAlive">Default Client Keep Alive{{template "tooltip" "Default persistent keepalive interval (0-600 seconds) for new clients. Helps maintain connections behind NAT."}}</label>
                 <input type="number" class="form-control" id="defaultKeepAlive" name="defaultKeepAlive" value="">
             </div>

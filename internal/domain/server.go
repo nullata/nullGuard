@@ -16,6 +16,7 @@ type Server struct {
 	PostDown         *string `gorm:"type:text"`
 	WANAddress       string  `gorm:"type:varchar(100);not null"`
 	SupernetCidr     *string `gorm:"type:varchar(100)"`
+	BridgeNetworks   *string `gorm:"type:text"`
 	DefaultKeepalive *int    `gorm:"type:int"`
 	AutoRestart      bool    `gorm:"default:false"`
 }

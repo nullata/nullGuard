@@ -85,7 +85,10 @@ func UpdateFieldIfChanged[T comparable](field *T, newValue T) {
 }
 
 func UpdatePointerFieldIfChanged[T comparable](field **T, newValue *T) {
-	if newValue != nil && (*field == nil || *newValue != **field) {
+	if newValue == nil && *field == nil {
+		return
+	}
+	if newValue == nil || *field == nil || *newValue != **field {
 		*field = newValue
 	}
 }

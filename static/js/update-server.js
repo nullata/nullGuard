@@ -19,6 +19,8 @@ $(document).ready(function () {
       normalize($("#wanAddress").val()) !== normalize(initialData.wanAddress) ||
       normalize($("#supernetCidr").val()) !==
         normalize(initialData.supernetCidr) ||
+      normalize($("#bridgeNetworks").val()) !==
+        normalize(initialData.bridgeNetworks) ||
       normalize($("#defaultKeepAlive").val()) !==
         normalize(initialData.defaultKeepAlive);
 

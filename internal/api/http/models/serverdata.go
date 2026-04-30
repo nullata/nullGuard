@@ -18,6 +18,7 @@ type RawServerData struct {
 	PostDown         string      `json:"postDown"`
 	WANAddress       string      `json:"wanAddress"`
 	SupernetCIDR     string      `json:"supernetCidr"`
+	BridgeNetworks   string      `json:"bridgeNetworks"`
 	DefaultKeepAlive json.Number `json:"defaultKeepAlive"`
 	AutoRestart      bool        `json:"autoRestart"`
 }

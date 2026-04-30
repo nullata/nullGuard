@@ -44,6 +44,7 @@ $(document).ready(function () {
           $("#postDown").val(response.data.PostDown);
           $("#wanAddress").val(response.data.WANAddress);
           $("#supernetCidr").val(response.data.SupernetCidr);
+          $("#bridgeNetworks").val(response.data.BridgeNetworks);
           $("#defaultKeepAlive").val(response.data.DefaultKeepalive);
 
           initialData = {
@@ -57,6 +58,7 @@ $(document).ready(function () {
             postDown: response.data.PostDown,
             wanAddress: response.data.WANAddress,
             supernetCidr: response.data.SupernetCidr,
+            bridgeNetworks: response.data.BridgeNetworks,
             defaultKeepAlive: response.data.DefaultKeepalive,
           };
 

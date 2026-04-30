@@ -18,6 +18,11 @@ $(document).ready(function () {
     updateAllowedIPs();
   });
 
+  // delegated handler so it works for any current/future bridge checkboxes
+  $("#bridgeNetworksList").on("change", ".bridge-network-checkbox", function () {
+    toggleAllowedIp($(this).data("cidr"), $(this).is(":checked"));
+  });
+
   $("#cancel").on("click", function (event) {
     event.preventDefault();
     clearClientSession();
