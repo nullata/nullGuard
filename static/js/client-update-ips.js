@@ -38,7 +38,7 @@ function updateAllowedIPs() {
   allowedIpsInput.val(currentValues.join(", "));
 }
 
-// add or remove a single CIDR from the AllowedIps field. used by bridge network checkboxes
+// add or remove a single CIDR from the AllowedIps field. used by any cidr-toggle-checkbox
 function toggleAllowedIp(cidr, checked) {
   var allowedIpsInput = $("#allowedIps");
   var currentValues = allowedIpsInput
@@ -64,3 +64,31 @@ function toggleAllowedIp(cidr, checked) {
 
   allowedIpsInput.val(currentValues.join(", "));
 }
+
+// render an unchecked checkbox per CIDR into $container, returning whether anything was rendered.
+// idPrefix scopes element ids so multiple groups on the same page don't collide.
+function renderCidrCheckboxes($container, cidrs, idPrefix) {
+  $container.empty();
+  if (!cidrs || cidrs.length === 0) {
+    return false;
+  }
+  cidrs.forEach(function (cidr, idx) {
+    var id = idPrefix + "-" + idx;
+    var $wrap = $("<div>").addClass("form-check");
+    var $cb = $("<input>")
+      .attr({ type: "checkbox", id: id, "data-cidr": cidr })
+      .addClass("form-check-input cidr-toggle-checkbox");
+    var $lbl = $("<label>")
+      .attr("for", id)
+      .addClass("form-check-label")
+      .text(cidr);
+    $wrap.append($cb).append($lbl);
+    $container.append($wrap);
+  });
+  return true;
+}
+
+// single delegated handler for every cidr-toggle-checkbox on the page
+$(document).on("change", ".cidr-toggle-checkbox", function () {
+  toggleAllowedIp($(this).data("cidr"), $(this).is(":checked"));
+});

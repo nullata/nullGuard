@@ -21,6 +21,7 @@ import (
 	"nullguard/internal/domain"
 	"nullguard/internal/infrastructure/config"
 	"nullguard/internal/pkg/constants"
+	"nullguard/internal/pkg/validation"
 	"nullguard/internal/repository"
 	utils "nullguard/internal/service/wireguard"
 )
@@ -205,8 +206,14 @@ PrivateKey = %s
 		return fmt.Errorf("failed to fetch clients for server %s: %w", server.InterfaceName, err)
 	}
 	for _, client := range clients {
+		allowedIPs := client.AddressCidr
+		if client.ExposedLans != nil {
+			for _, c := range validation.SplitCidrCsv(*client.ExposedLans) {
+				allowedIPs += ", " + c
+			}
+		}
 		config += fmt.Sprintf("\n[Peer]\n# %s\nPublicKey = %s\nAllowedIPs = %s\n",
-			client.Name, client.PublicKey, client.AddressCidr)
+			client.Name, client.PublicKey, allowedIPs)
 		if client.Keepalive > 0 {
 			config += fmt.Sprintf("PersistentKeepalive = %d\n", client.Keepalive)
 		}

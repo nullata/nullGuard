@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"strings"
 )
 
 // define the regex as a package-level variable
@@ -32,4 +33,20 @@ func ValidateIP(ipStr string) error {
 		return fmt.Errorf("Invalid IP: %s", ipStr)
 	}
 	return nil
+}
+
+// SplitCidrCsv splits a comma-separated CIDR string into a slice of trimmed,
+// non-empty entries. Returns nil for empty input.
+func SplitCidrCsv(s string) []string {
+	if strings.TrimSpace(s) == "" {
+		return nil
+	}
+	var out []string
+	for _, c := range strings.Split(s, ",") {
+		c = strings.TrimSpace(c)
+		if c != "" {
+			out = append(out, c)
+		}
+	}
+	return out
 }

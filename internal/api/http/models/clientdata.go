@@ -18,6 +18,7 @@ type RawClientData struct {
 	Keepalive          json.Number `json:"keepalive"`
 	ServerID           json.Number `json:"serverId"`
 	ServerSupernetCidr string      `json:"serverSupernet"`
+	ExposedLans        string      `json:"exposedLans"`
 	IsConnected        bool        `json:"isConnected"`
 	TransferRx         int64       `json:"transferRx"`
 	TransferTx         int64       `json:"transferTx"`

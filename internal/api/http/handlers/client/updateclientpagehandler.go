@@ -119,7 +119,15 @@ func UpdateClientPageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bridgeRaw, _ := session.Values["serverBridgeNetworks"].(string)
-	bridges := buildBridgeCheckboxes(bridgeRaw, clientData.AllowedIps)
+	bridges := buildCidrCheckboxes(bridgeRaw, clientData.AllowedIps)
+
+	// fetch live peer-exposed LANs (excluding self) for the reachable-peer-LANs checkbox group
+	var peerLanCheckboxes []CidrCheckbox
+	if server, err := serverservice.GetServerByID(int(clientData.ServerID)); err == nil {
+		if peerLans, err := clientservice.GetPeerExposedLans(server, clientData.ID); err == nil {
+			peerLanCheckboxes = buildCidrCheckboxes(strings.Join(peerLans, ","), clientData.AllowedIps)
+		}
+	}
 
 	// prepare data for rendering
 	data := map[string]interface{}{
@@ -129,38 +137,8 @@ func UpdateClientPageHandler(w http.ResponseWriter, r *http.Request) {
 		"ServerAddress":   serverAddress,
 		"ServerSupernet":  serverSupernet,
 		"BridgeNetworks":  bridges,
+		"PeerLans":        peerLanCheckboxes,
 	}
 
 	template.TemplateHandler(w, "templates/update-client.html", data)
-}
-
-type bridgeCheckbox struct {
-	CIDR    string
-	Checked bool
-}
-
-// buildBridgeCheckboxes returns the bridge network list with each CIDR's checked state
-// derived from whether it currently appears in the client's AllowedIps field.
-func buildBridgeCheckboxes(bridgeRaw, allowedIps string) []bridgeCheckbox {
-	if strings.TrimSpace(bridgeRaw) == "" {
-		return nil
-	}
-
-	active := map[string]bool{}
-	for _, c := range strings.Split(allowedIps, ",") {
-		c = strings.TrimSpace(c)
-		if c != "" {
-			active[c] = true
-		}
-	}
-
-	var out []bridgeCheckbox
-	for _, c := range strings.Split(bridgeRaw, ",") {
-		c = strings.TrimSpace(c)
-		if c == "" {
-			continue
-		}
-		out = append(out, bridgeCheckbox{CIDR: c, Checked: active[c]})
-	}
-	return out
 }

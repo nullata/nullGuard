@@ -62,6 +62,17 @@
                 <strong>Watch out for overlap with the client's own local network.</strong> If a client device is already on one of these networks locally (e.g. its own home Wi-Fi is 192.168.50.0/24), ticking that box will route that subnet through the VPN and the client will lose access to its local devices while connected.
             </small>
         </div>
+        <div class="form-group" id="peerLansGroup" style="display: none;">
+            <label class="fw-semibold">Reachable Peer LANs{{template "tooltip" "Other clients on this server are exposing these LANs. Tick a box to route that subnet through the VPN so this client can reach it."}}</label>
+            <div id="peerLansList" class="border rounded p-3 bg-white"></div>
+            <small class="form-text text-muted d-block mt-2">
+                <strong>Watch out for overlap with the client's own local network.</strong> If this client's home network overlaps a peer's exposed LAN, ticking the box will steal that subnet's traffic into the tunnel.
+            </small>
+        </div>
+        <div class="form-group">
+            <label for="exposedLans">Exposed LANs{{template "tooltip" "Comma-separated CIDRs of local networks reachable through this client. The server will route those subnets to this peer so other clients can reach them. Requires IP forwarding + masquerade on this client's host."}}</label>
+            <input type="text" class="form-control" id="exposedLans" name="exposedLans" value="" placeholder="e.g. 192.168.10.0/24">
+        </div>
         <div class="form-group">
             <label for="dnsServers">DNS Servers{{template "tooltip" "DNS servers the client will use when connected. Comma-separated, max 2 (e.g. 8.8.8.8, 1.1.1.1). Leave empty for no DNS override."}}</label>
             <input type="text" class="form-control" id="dnsServers" name="dnsServers" value=""

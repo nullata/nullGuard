@@ -18,11 +18,6 @@ $(document).ready(function () {
     updateAllowedIPs();
   });
 
-  // delegated handler so it works for any current/future bridge checkboxes
-  $("#bridgeNetworksList").on("change", ".bridge-network-checkbox", function () {
-    toggleAllowedIp($(this).data("cidr"), $(this).is(":checked"));
-  });
-
   $("#cancel").on("click", function (event) {
     event.preventDefault();
     clearClientSession();
@@ -51,6 +46,7 @@ $(document).ready(function () {
   const initDns = $("#dnsServers").val();
   const initFt = $("#fullTunnel").val();
   const initKl = $("#keepalive").val();
+  const initExposedLans = $("#exposedLans").val();
 
   $("#update-client-form").on("submit", function (event) {
     event.preventDefault();
@@ -62,7 +58,8 @@ $(document).ready(function () {
       normalize(initIps) !== normalize($("#allowedIps").val()) ||
       normalize(initDns) !== normalize($("#dnsServers").val()) ||
       normalize(initFt) !== normalize($("#fullTunnel").val()) ||
-      normalize(initKl) !== normalize($("#keepalive").val());
+      normalize(initKl) !== normalize($("#keepalive").val()) ||
+      normalize(initExposedLans) !== normalize($("#exposedLans").val());
 
     if (!formChanged) {
       showModal("Update client", "No changes detected. Nothing to update", {

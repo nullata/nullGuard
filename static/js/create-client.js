@@ -33,26 +33,23 @@ $(document).ready(function () {
           $("#useServerDns").prop("checked", false);
 
           // render bridge network checkboxes for this server
-          var bridgeNetworks = response.data.bridgeNetworks || [];
-          var $list = $("#bridgeNetworksList").empty();
-          if (bridgeNetworks.length === 0) {
-            $("#bridgeNetworksGroup").hide();
-          } else {
-            bridgeNetworks.forEach(function (cidr, idx) {
-              var id = "bridge-" + idx;
-              var $wrap = $("<div>").addClass("form-check");
-              var $cb = $("<input>")
-                .attr({ type: "checkbox", id: id, "data-cidr": cidr })
-                .addClass("form-check-input bridge-network-checkbox");
-              var $lbl = $("<label>")
-                .attr("for", id)
-                .addClass("form-check-label")
-                .text(cidr);
-              $wrap.append($cb).append($lbl);
-              $list.append($wrap);
-            });
-            $("#bridgeNetworksGroup").show();
-          }
+          var hasBridges = renderCidrCheckboxes(
+            $("#bridgeNetworksList"),
+            response.data.bridgeNetworks || [],
+            "bridge"
+          );
+          $("#bridgeNetworksGroup").toggle(hasBridges);
+
+          // render peer LAN checkboxes (other clients' exposed LANs)
+          var hasPeerLans = renderCidrCheckboxes(
+            $("#peerLansList"),
+            response.data.peerLans || [],
+            "peerlan"
+          );
+          $("#peerLansGroup").toggle(hasPeerLans);
+
+          // reset exposed LANs - new client, no value
+          $("#exposedLans").val("");
 
           updateAllowedIPs();
         },
@@ -108,11 +105,6 @@ $(document).ready(function () {
 
   $("#fullTunnel").change(function () {
     updateAllowedIPs();
-  });
-
-  // delegated handler so it works for checkboxes rendered after page load
-  $("#bridgeNetworksList").on("change", ".bridge-network-checkbox", function () {
-    toggleAllowedIp($(this).data("cidr"), $(this).is(":checked"));
   });
 
   $("#useServerDns").change(function () {

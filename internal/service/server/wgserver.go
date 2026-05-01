@@ -200,6 +200,10 @@ func Validate(server *domain.Server) error {
 		return fmt.Errorf("Server name can only contain alphanumeric characters, dots (.), dashes (-), and underscores (_)")
 	}
 
+	if len(server.InterfaceName) > 15 {
+		return fmt.Errorf("Interface Name must be 15 characters or fewer (Linux interface name limit)")
+	}
+
 	if server.PrivateKey == "" || server.PublicKey == "" {
 		return fmt.Errorf("Public and Private keys cannot be empty")
 	}
@@ -228,19 +232,17 @@ func Validate(server *domain.Server) error {
 		return fmt.Errorf("Server port set to %d. A valid server port is required", server.Port)
 	}
 
-	if server.SupernetCidr != nil && *server.SupernetCidr != "" {
-		superNetCIDRs := strings.Split(*server.SupernetCidr, ",")
-		for i := range superNetCIDRs {
-			if _, err := validation.ValidateCIDR(strings.TrimSpace(superNetCIDRs[i])); err != nil {
+	if server.SupernetCidr != nil {
+		for _, c := range validation.SplitCidrCsv(*server.SupernetCidr) {
+			if _, err := validation.ValidateCIDR(c); err != nil {
 				return err
 			}
 		}
 	}
 
-	if server.BridgeNetworks != nil && *server.BridgeNetworks != "" {
-		bridgeCIDRs := strings.Split(*server.BridgeNetworks, ",")
-		for i := range bridgeCIDRs {
-			if _, err := validation.ValidateCIDR(strings.TrimSpace(bridgeCIDRs[i])); err != nil {
+	if server.BridgeNetworks != nil {
+		for _, c := range validation.SplitCidrCsv(*server.BridgeNetworks) {
+			if _, err := validation.ValidateCIDR(c); err != nil {
 				return err
 			}
 		}

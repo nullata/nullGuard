@@ -22,8 +22,13 @@ import (
 	utils "nullguard/internal/service/wireguard"
 )
 
-func BuildClientObj(name, publicKey, privateKey, address, allowedIps, dnsServers string, fullTunnel bool,
+func BuildClientObj(name, publicKey, privateKey, address, allowedIps, dnsServers, exposedLans string, fullTunnel bool,
 	id, keepalive, serverId *int) domain.Client {
+
+	var exposedLansPtr *string
+	if exposedLans != "" {
+		exposedLansPtr = &exposedLans
+	}
 
 	client := domain.Client{
 		Name:        name,
@@ -33,6 +38,7 @@ func BuildClientObj(name, publicKey, privateKey, address, allowedIps, dnsServers
 		AllowedIps:  allowedIps,
 		DnsServers:  dnsServers,
 		FullTunnel:  fullTunnel,
+		ExposedLans: exposedLansPtr,
 	}
 
 	// assign server id if provided
@@ -73,7 +79,7 @@ func ConvertRawToClient(rawData models.RawClientData) (domain.Client, error) {
 	}
 
 	return BuildClientObj(rawData.Name, rawData.PublicKey, rawData.PrivateKey,
-		rawData.AddressCidr, rawData.AllowedIps, rawData.DnsServers, rawData.FullTunnel, idPtr, keepalive, serverID), nil
+		rawData.AddressCidr, rawData.AllowedIps, rawData.DnsServers, rawData.ExposedLans, rawData.FullTunnel, idPtr, keepalive, serverID), nil
 }
 
 func Validate(client *domain.Client) error {
@@ -181,6 +187,14 @@ func Validate(client *domain.Client) error {
 		}
 	}
 
+	if client.ExposedLans != nil {
+		for _, c := range validation.SplitCidrCsv(*client.ExposedLans) {
+			if _, err := validation.ValidateCIDR(c); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -226,6 +240,7 @@ func UpdateClient(oldClient *domain.Client, newClient domain.Client) error {
 	database.UpdateFieldIfChanged(&oldClient.DnsServers, newClient.DnsServers)
 	database.UpdateFieldIfChanged(&oldClient.FullTunnel, newClient.FullTunnel)
 	database.UpdateFieldIfChanged(&oldClient.Keepalive, newClient.Keepalive)
+	database.UpdatePointerFieldIfChanged(&oldClient.ExposedLans, newClient.ExposedLans)
 
 	// save the updated object via repository
 	return repository.UpdateClient(oldClient)
@@ -248,6 +263,30 @@ func GetClientByIDAndServerID(client domain.Client) (domain.Client, error) {
 // GetServerClientsList retrieves all clients for a given server
 func GetServerClientsList(server domain.Server) ([]domain.Client, error) {
 	return repository.FetchServerClientsList(server)
+}
+
+// GetPeerExposedLans returns the deduped union of every client's ExposedLans on
+// the given server, optionally excluding one client (pass 0 to include all).
+// Use this to surface "reachable peer LANs" as a checkbox list on the client form.
+func GetPeerExposedLans(server domain.Server, excludeClientID uint) ([]string, error) {
+	clients, err := repository.FetchServerClientsList(server)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, c := range clients {
+		if c.ID == excludeClientID || c.ExposedLans == nil {
+			continue
+		}
+		for _, cidr := range validation.SplitCidrCsv(*c.ExposedLans) {
+			if !seen[cidr] {
+				seen[cidr] = true
+				out = append(out, cidr)
+			}
+		}
+	}
+	return out, nil
 }
 
 // CreateClient creates a new client in the database

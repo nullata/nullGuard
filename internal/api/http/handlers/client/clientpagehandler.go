@@ -15,6 +15,7 @@ import (
 	"nullguard/internal/infrastructure/template"
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
+	"nullguard/internal/pkg/validation"
 	clientservice "nullguard/internal/service/client"
 	serverservice "nullguard/internal/service/server"
 )
@@ -79,7 +80,11 @@ func BuildClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	keepalive := json.Number(strconv.Itoa(*server.DefaultKeepalive))
+	keepaliveVal := 30
+	if server.DefaultKeepalive != nil {
+		keepaliveVal = *server.DefaultKeepalive
+	}
+	keepalive := json.Number(strconv.Itoa(keepaliveVal))
 	subnetCidr, ipNet, err := clientservice.GetSubnetBaseCIDR(server.Address)
 	if err != nil {
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "There was a problem determining the server subnet", nil)
@@ -99,13 +104,14 @@ func BuildClient(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bridgeNetworks := []string{}
-	if server.BridgeNetworks != nil && strings.TrimSpace(*server.BridgeNetworks) != "" {
-		for _, c := range strings.Split(*server.BridgeNetworks, ",") {
-			c = strings.TrimSpace(c)
-			if c != "" {
-				bridgeNetworks = append(bridgeNetworks, c)
-			}
-		}
+	if server.BridgeNetworks != nil {
+		bridgeNetworks = validation.SplitCidrCsv(*server.BridgeNetworks)
+	}
+
+	peerLans, err := clientservice.GetPeerExposedLans(server, 0)
+	if err != nil {
+		log.Printf("Error fetching peer exposed LANs: %v", err)
+		peerLans = nil
 	}
 
 	serverDns := strings.Split(server.Address, "/")[0]
@@ -121,6 +127,7 @@ func BuildClient(w http.ResponseWriter, r *http.Request) {
 		"clientData":     clientData,
 		"serverDns":      serverDns,
 		"bridgeNetworks": bridgeNetworks,
+		"peerLans":       peerLans,
 	}
 
 	httputil.SendJSONResponse(w, http.StatusOK, constants.StatusSuccess, "Success", responseData)

@@ -38,7 +38,7 @@ done
 host="localhost"
 port="8080"
 apiKey=""
-serverName="integration-test-$$"  # unique per run
+serverName="wg-test-$$"  # unique per run; must fit within 15 chars (Linux interface name limit)
 
 # parse args
 while [[ $# -gt 0 ]]; do
@@ -57,6 +57,11 @@ done
 
 if [[ -z "${apiKey}" ]]; then
   echo "Error: --api-key is required"
+  exit 1
+fi
+
+if [[ ${#serverName} -gt 15 ]]; then
+  echo "Error: server name '${serverName}' is ${#serverName} characters; Linux interface names are limited to 15"
   exit 1
 fi
 
@@ -279,6 +284,41 @@ if [[ "${clientCount}" == "0" ]]; then
 else
   fail=$((fail + 1))
   echo "  $(red "FAIL") Expected 0 clients, got ${clientCount}"
+fi
+
+###############################
+#  4b. Client exposed LANs (LAN-to-LAN)
+###############################
+echo ""
+echo "$(bold "[Client exposedLans]")"
+
+# create a client that exposes a LAN
+runTest "Create client with exposedLans" POST "/api/v1/create-client" 200 \
+  "{\"serverId\":${serverId},\"name\":\"exposer-$$\",\"exposedLans\":\"192.168.99.0/24\"}"
+
+# build-client should now surface that exposed LAN as a peer LAN
+runTest "build-client surfaces peer LANs" POST "/api/v1/build-client" 200 \
+  "{\"serverId\":${serverId}}"
+
+total=$((total + 1))
+peerLan=$(echo "${lastResponse}" | jq -r '.data.peerLans[0] // empty')
+if [[ "${peerLan}" == "192.168.99.0/24" ]]; then
+  pass=$((pass + 1))
+  echo "  $(green "PASS") build-client surfaces exposer's exposedLans"
+else
+  fail=$((fail + 1))
+  echo "  $(red "FAIL") expected peerLans[0]=192.168.99.0/24, got '${peerLan}'"
+fi
+
+# reject invalid CIDR in exposedLans
+runTest "Reject invalid exposedLans CIDR" POST "/api/v1/create-client" 400 \
+  "{\"serverId\":${serverId},\"name\":\"badexp-$$\",\"exposedLans\":\"not-a-cidr\"}"
+
+# clean up the exposer client so server delete succeeds (server has FK on clients)
+exposerId=$(curl -s -X GET -H "${authHeader}" "${baseUrl}/api/v1/list-clients/${serverId}" | jq -r '.data[0].id')
+if [[ -n "${exposerId}" && "${exposerId}" != "null" ]]; then
+  runTest "Delete exposer client" DELETE "/api/v1/delete-client" 200 \
+    "{\"clientId\":${exposerId},\"serverId\":${serverId}}"
 fi
 
 ###############################

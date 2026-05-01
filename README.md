@@ -178,6 +178,40 @@ nullGuard manages WireGuard configurations through a server-client model:
 
 **Bridge networks**: Each server can declare a list of reachable server-side LANs (the `bridgeNetworks` field). When creating or editing a client, those CIDRs render as checkboxes in the web UI - ticking one appends it to that client's `AllowedIPs`, unticking removes it. Use this to grant individual clients access to LANs behind the server (e.g. a home subnet at `192.168.50.0/24`) without hand-editing the WireGuard config. Watch out for clients whose own local network overlaps a checked CIDR - that LAN gets routed through the VPN and the client loses local access while connected.
 
+**LAN-to-LAN (peer-exposed networks)**: A client can declare CIDRs of LANs reachable *through itself* (the `exposedLans` field). On server-config generation those CIDRs are added to that client's `[Peer]` `AllowedIPs`, so the server routes inbound traffic for those subnets to that peer's tunnel. Other clients then see the exposed LANs as a "Reachable Peer LANs" checkbox group - ticking one appends the CIDR to that client's own `AllowedIPs` so it routes traffic for that subnet into the tunnel. The exposing client's host must have `net.ipv4.ip_forward=1` and either NAT/masquerade or LAN-side static routes configured - that is OS-level setup, not handled by nullguard. After any change to `exposedLans`, restart the server (or rely on auto-restart) so the new server config is loaded; other clients' downloadable `.conf` files also need to be re-fetched.
+
+#### Setting up a LAN-to-LAN client on Ubuntu
+
+Suppose a client host sits on `192.168.10.0/24` via its `eth0` interface and you want other VPN peers to reach that subnet. After setting `exposedLans: 192.168.10.0/24` in nullguard and restarting the server, do the following on that Ubuntu host:
+
+**1. Enable IP forwarding**
+
+```bash
+# Apply immediately
+sudo sysctl -w net.ipv4.ip_forward=1
+
+# Persist across reboots
+echo "net.ipv4.ip_forward=1" | sudo tee /etc/sysctl.d/99-ip-forward.conf
+sudo sysctl -p /etc/sysctl.d/99-ip-forward.conf
+```
+
+**2. Masquerade outbound traffic toward the LAN**
+
+This NATes the source IP of incoming VPN packets to the host's own LAN IP, so devices on `192.168.10.0/24` don't need a static route back to the VPN subnet.
+
+```bash
+# Replace eth0 with the interface facing your local LAN (check with: ip -br a)
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+# Persist the rule across reboots
+sudo apt install -y iptables-persistent
+sudo netfilter-persistent save
+```
+
+After these two steps, any VPN peer that has ticked `192.168.10.0/24` in its "Reachable Peer LANs" checkboxes (and re-downloaded its config) will be able to reach hosts on that subnet. The exposing client doesn't need to do anything special in WireGuard itself  the `AllowedIPs` expansion on the server side and the kernel forwarding + masquerade on the client side handle everything.
+
+> **Note:** Masquerade hides the VPN peer's real address behind the exposing client's LAN IP. If you need the original VPN addresses visible on the LAN (e.g. for firewall rules), add a static route on your LAN gateway pointing the VPN subnet (`10.240.0.0/24`) via the exposing client's LAN IP instead of using masquerade.
+
 ---
 
 ## API
@@ -485,11 +519,13 @@ Content-Type: application/json
 | `dnsServers` | string | no | DNS servers for the client, comma-delimited (max 2). Omit for no DNS. Example: `"8.8.8.8, 1.1.1.1"` |
 | `fullTunnel` | boolean | no | Route all traffic through the VPN (default: `false`) |
 | `keepalive` | number | no | Persistent keepalive interval in seconds (0-600). Uses server default (30) if omitted. |
+| `exposedLans` | string | no | Comma-separated CIDRs of LANs reachable through this client. Added to the server's route to this peer so other clients can reach them. Requires IP forwarding + masquerade on the client host. |
 
 **Validation:**
 - Keepalive must be between 0-600 seconds (WireGuard specification)
 - Client names must be alphanumeric with dots, dashes, or underscores
 - Addresses must be valid CIDR notation
+- Each entry in `exposedLans` must be a valid CIDR
 
 WireGuard keys, client address, and allowed IPs are all derived automatically from the server configuration when not provided.
 
@@ -578,6 +614,7 @@ Content-Type: application/json
 | `dnsServers` | string | no | DNS servers, comma-delimited |
 | `fullTunnel` | boolean | no | Route all traffic through VPN |
 | `keepalive` | number | no | Keepalive interval (0-600 seconds) |
+| `exposedLans` | string | no | Comma-separated CIDRs of LANs reachable through this client. Submit `""` to clear. |
 | `publicKey` | string | yes | Client public key |
 | `privateKey` | string | yes | Client private key |
 
@@ -771,6 +808,7 @@ The test suite covers:
 - Server lifecycle (deploy/start, restart, stop)
 - Client CRUD operations (create, list, config/QR/download, delete)
 - Bridge networks set/round-trip/clear and CIDR validation
+- Client `exposedLans` accept/reject/clear
 - Error cases (authentication, validation, not found)
 
 See [integration-tests/run.sh](integration-tests/run.sh) for implementation details.
