@@ -1,7 +1,7 @@
 /* CSS Variables for Light/Dark Theme */
 :root {
     /* Background colors */
-    --bg-body: #ffffff;
+    --bg-body: #adadad;
     --bg-primary: #f8f9fa;
     --bg-secondary: #e9ecef;
     --bg-card: #ffffff;
@@ -328,6 +328,49 @@ select.form-control,
 
 .modal-title {
     color: #ffffff;
+}
+
+.modal-cheatsheet {
+    width: min(95vw, 960px);
+    max-width: 95vw;
+    height: 85vh;
+    max-height: 85vh;
+}
+
+.modal-custom-position .modal-dialog.modal-cheatsheet {
+    margin-top: 5vh;
+    margin-bottom: 5vh;
+}
+
+.modal-cheatsheet .modal-content {
+    height: 100%;
+    max-height: 85vh;
+}
+
+.modal-cheatsheet .modal-body {
+    overflow-y: auto;
+}
+
+.modal-cheatsheet pre {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    padding: 12px 14px;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.modal-cheatsheet pre code {
+    background: transparent;
+    color: inherit;
+    font-family: Consolas, Monaco, "Courier New", monospace;
+    font-size: 0.9rem;
+}
+
+.modal-cheatsheet hr {
+    border-color: var(--border-color);
+    margin: 1.25rem 0;
 }
 
 .modal-body {

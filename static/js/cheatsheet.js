@@ -24,6 +24,7 @@ $(document).on("click", ".info-tooltip-clickable", function (event) {
         showCloseButton: true,
         backdrop: true,
         keyboard: true,
+        modalClass: "modal-cheatsheet",
       });
     })
     .fail(function () {
@@ -32,6 +33,7 @@ $(document).on("click", ".info-tooltip-clickable", function (event) {
         status: "error",
         backdrop: true,
         keyboard: true,
+        modalClass: "modal-cheatsheet",
       });
     });
 });

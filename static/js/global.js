@@ -11,6 +11,12 @@ function showModal(title, bodyContent, options = {}) {
   $("#modal .modal-title").text(title);
   $("#modal .modal-body").html(bodyContent);
 
+  var modalDialog = $("#modal .modal-dialog");
+  modalDialog.removeClass("modal-cheatsheet");
+  if (options.modalClass) {
+    modalDialog.addClass(options.modalClass);
+  }
+
   // remove any existing background color classes from the modal-header
   $("#modal .modal-header").removeClass(
     "bg-primary bg-info bg-success bg-danger bg-warning bg-secondary",
@@ -93,7 +99,11 @@ function showModal(title, bodyContent, options = {}) {
 
   // show the modal and configure it not to close when clicking outside or pressing escape
   var modalEl = document.getElementById("modal");
-  var modal = bootstrap.Modal.getOrCreateInstance(modalEl, {
+  var existingModal = bootstrap.Modal.getInstance(modalEl);
+  if (existingModal) {
+    existingModal.dispose();
+  }
+  var modal = new bootstrap.Modal(modalEl, {
     backdrop: options.backdrop || "static", // prevents closing on outside click
     keyboard: options.keyboard || false, // prevents closing on pressing escape
   });
