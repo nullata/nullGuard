@@ -51,7 +51,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25\r\n}",
+          "raw": "{\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25,\r\n  \"exposedLans\": \"\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -257,7 +257,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"defaultKeepAlive\": 30,\r\n  \"comment\": \"Production VPN\"\r\n}",
+          "raw": "{\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"bridgeNetworks\": \"\",\r\n  \"defaultKeepAlive\": 30,\r\n  \"comment\": \"Production VPN\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -335,7 +335,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"publicKey\": \"your-server-public-key\",\r\n  \"privateKey\": \"your-server-private-key\",\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"defaultKeepAlive\": 30\r\n}",
+          "raw": "{\r\n  \"serverId\": 1,\r\n  \"interfaceName\": \"wg0\",\r\n  \"address\": \"10.0.0.1/24\",\r\n  \"port\": 51820,\r\n  \"publicKey\": \"your-server-public-key\",\r\n  \"privateKey\": \"your-server-private-key\",\r\n  \"wanAddress\": \"vpn.example.com\",\r\n  \"bridgeNetworks\": \"\",\r\n  \"defaultKeepAlive\": 30\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -491,7 +491,7 @@
         "header": [],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"id\": 1,\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25,\r\n  \"publicKey\": \"client-public-key\",\r\n  \"privateKey\": \"client-private-key\"\r\n}",
+          "raw": "{\r\n  \"id\": 1,\r\n  \"serverId\": 5,\r\n  \"name\": \"my-laptop\",\r\n  \"address\": \"10.0.0.2/32\",\r\n  \"allowedIps\": \"10.0.0.0/24\",\r\n  \"dnsServers\": \"8.8.8.8, 1.1.1.1\",\r\n  \"fullTunnel\": false,\r\n  \"keepalive\": 25,\r\n  \"exposedLans\": \"\",\r\n  \"publicKey\": \"client-public-key\",\r\n  \"privateKey\": \"client-private-key\"\r\n}",
           "options": {
             "raw": {
               "language": "json"
