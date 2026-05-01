@@ -887,27 +887,6 @@ go build -o nullguard cmd/nullguard/main.go
 
 Make sure to configure environment variables (see [Environment Variables](#environment-variables)) before running.
 
-### Project Structure
-
-```
-nullguard/
-├── cmd/nullguard/          # Application entry point
-├── internal/
-│   ├── api/http/           # HTTP handlers and routing
-│   │   ├── handlers/       # Endpoint handlers
-│   │   ├── middleware/     # Auth and session middleware
-│   │   └── models/         # Request/response models
-│   ├── domain/             # Domain entities (Server, Client)
-│   ├── infrastructure/     # Database, config, templates
-│   ├── repository/         # Database queries
-│   ├── service/            # Business logic
-│   └── pkg/                # Utilities and helpers
-├── static/                 # CSS, JS, images
-├── templates/              # HTML templates
-├── integration-tests/      # API integration tests
-└── docs/                   # API documentation (Postman)
-```
-
 ### Running Tests
 
 Integration tests require a running instance:
