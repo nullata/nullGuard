@@ -237,6 +237,7 @@ All responses follow this format:
   "postUp": "",            // Optional iptables rules
   "postDown": "",          // Optional iptables rules
   "supernetCidr": "",      // Optional supernet CIDR
+  "bridgeNetworks": "",    // Optional comma-separated CIDRs of server-side LANs clients may bridge into
   "defaultKeepAlive": 30,  // 0-600 seconds
   "comment": ""            // Optional description
 }
@@ -254,7 +255,8 @@ All responses follow this format:
   "allowedIps": "",        // Derived from server if omitted
   "dnsServers": "8.8.8.8, 1.1.1.1",  // Optional, max 2
   "fullTunnel": false,     // Route all traffic through VPN
-  "keepalive": 30          // 0-600 seconds, uses server default if omitted
+  "keepalive": 30,         // 0-600 seconds, uses server default if omitted
+  "exposedLans": ""        // Optional comma-separated CIDRs of LANs reachable through this client (LAN-to-LAN)
 }
 ```
 
@@ -276,6 +278,10 @@ All responses follow this format:
 - **Servers must be stopped** before updating or deleting
 - **Auto-generation** - WireGuard keys, IPs, and allowed IPs are auto-generated when not provided
 - **Interface name verification** - Destructive operations require both `serverId` and `interfaceName` to prevent accidents
+- **Interface name length** - Linux limits interface names to 15 characters
+- **Update-server clears omitted fields** - On `update-server`, omitting an optional field (or sending it as `""`) **clears** the stored value. Applies to `postUp`, `postDown`, `supernetCidr`, `bridgeNetworks`, and `defaultKeepAlive` - always include the fields you want preserved
+- **Bridge networks** - A server's `bridgeNetworks` lists server-side LANs that the web UI surfaces as checkboxes on each client form; ticking one appends the CIDR to that client's `AllowedIPs`
+- **LAN-to-LAN (`exposedLans`)** - A client may declare CIDRs reachable through itself; those CIDRs are added to that peer's server-side `AllowedIPs` so other clients can route to them. Requires `net.ipv4.ip_forward=1` and NAT/masquerade (or LAN-side static routes) on the exposing client's host - see the full README for the Ubuntu setup walkthrough
 
 ## Common Issues
 

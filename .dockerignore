@@ -13,3 +13,4 @@ docker-image-build.sh
 .env.example
 .env
 integration-tests
+.github
