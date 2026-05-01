@@ -1,0 +1,30 @@
+{{define "cheatsheet-supernet"}}
+<h5>Supernet</h5>
+<p>Common default ranges that this app adds or removes when Full Tunnel is toggled on a client.</p>
+
+<h6>Same subnet behavior</h6>
+<p>Clients default to routing only the server's VPN subnet.</p>
+<p>Example:</p>
+<pre><code>leave blank</code></pre>
+<hr>
+
+<h6>One VPN range</h6>
+<p>Full Tunnel adds a broader VPN range so clients can reach related VPN subnets.</p>
+<p>Example:</p>
+<pre><code>10.240.0.0/16</code></pre>
+<hr>
+
+<h6>All private 10.x networks</h6>
+<p>Full Tunnel routes every 10.x private address through the VPN. Use only if that is intentional.</p>
+<p>Example:</p>
+<pre><code>10.0.0.0/8</code></pre>
+<hr>
+
+<h6>All IPv4 traffic</h6>
+<p>Full Tunnel becomes a true IPv4 internet tunnel.</p>
+<p>Example:</p>
+<pre><code>0.0.0.0/0</code></pre>
+
+<p>Avoid broad ranges that overlap users' home or office LANs unless you want that traffic captured by the VPN.</p>
+<p class="mb-0">More details: <a href="https://www.wireguard.com/" target="_blank" rel="noopener noreferrer">WireGuard overview</a></p>
+{{end}}

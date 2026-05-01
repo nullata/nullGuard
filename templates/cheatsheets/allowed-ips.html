@@ -1,0 +1,35 @@
+{{define "cheatsheet-allowed-ips"}}
+<h5>Allowed IPs</h5>
+<p>Common ways to choose what traffic this client sends through the tunnel.</p>
+
+<h6>VPN only</h6>
+<p>The client only sends traffic for the WireGuard VPN subnet through the tunnel. Normal internet traffic stays local.</p>
+<p>Example:</p>
+<pre><code>10.240.0.0/24</code></pre>
+<hr>
+
+<h6>Full tunnel, IPv4</h6>
+<p>The client sends all IPv4 traffic through the VPN, including internet traffic.</p>
+<p>Example:</p>
+<pre><code>0.0.0.0/0</code></pre>
+<hr>
+
+<h6>Full tunnel, IPv4 and IPv6</h6>
+<p>The client sends all IPv4 and IPv6 traffic through the VPN.</p>
+<p>Example:</p>
+<pre><code>0.0.0.0/0, ::/0</code></pre>
+<hr>
+
+<h6>VPN plus one office LAN</h6>
+<p>The client can reach VPN peers and one private network behind the server or another routed peer.</p>
+<p>Example:</p>
+<pre><code>10.240.0.0/24, 192.168.50.0/24</code></pre>
+<hr>
+
+<h6>Single host route</h6>
+<p>The client only routes one specific private machine through the VPN instead of the whole LAN.</p>
+<p>Example:</p>
+<pre><code>10.240.0.0/24, 192.168.50.25/32</code></pre>
+
+<p class="mb-0">More details: <a href="https://www.wireguard.com/" target="_blank" rel="noopener noreferrer">WireGuard overview</a></p>
+{{end}}

@@ -1,0 +1,37 @@
+{{define "cheatsheet-server-postup"}}
+<h5>Server PostUp / PostDown</h5>
+<p>Common lifecycle commands for firewall and NAT behavior when the server interface starts or stops.</p>
+
+<h6>Basic NAT gateway</h6>
+<p>VPN clients can reach networks through the server's main network interface, and replies are masqueraded back through the server.</p>
+<p>Example:</p>
+<pre><code>PostUp = iptables -A FORWARD -i %i -j ACCEPT
+PostUp = iptables -A FORWARD -o %i -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = iptables -D FORWARD -i %i -j ACCEPT
+PostDown = iptables -D FORWARD -o %i -j ACCEPT
+PostDown = iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE</code></pre>
+<hr>
+
+<h6>LAN access only</h6>
+<p>VPN clients can reach a LAN through the server, but this does not intentionally turn the VPN into an internet gateway.</p>
+<p>Example:</p>
+<pre><code>PostUp = iptables -A FORWARD -i %i -o eth0 -d 192.168.50.0/24 -j ACCEPT
+PostDown = iptables -D FORWARD -i %i -o eth0 -d 192.168.50.0/24 -j ACCEPT</code></pre>
+<hr>
+
+<h6>Block one destination LAN</h6>
+<p>VPN clients are prevented from reaching a sensitive LAN.</p>
+<p>Example:</p>
+<pre><code>PostUp = iptables -A FORWARD -i %i -d 192.168.99.0/24 -j DROP
+PostDown = iptables -D FORWARD -i %i -d 192.168.99.0/24 -j DROP</code></pre>
+<hr>
+
+<h6>No custom rules</h6>
+<p>The tunnel comes up without adding firewall or NAT rules. Use this when routing and firewalling are handled elsewhere.</p>
+<p>Example:</p>
+<pre><code>leave blank</code></pre>
+
+<p>Replace <code>eth0</code> with the server's real outbound interface.</p>
+<p class="mb-0">More details: <a href="https://man7.org/linux/man-pages/man8/wg-quick.8.html" target="_blank" rel="noopener noreferrer">wg-quick man page</a></p>
+{{end}}

@@ -71,11 +71,11 @@
                 <input class="form-control" id="privateKey" name="privateKey" value="" disabled readonly></input>
             </div>
             <div class="form-group">
-                <label for="postUp">Post Up{{template "tooltip" "Shell commands to run after the WireGuard interface comes up. Commonly used for iptables NAT/forwarding rules."}}</label>
+                <label for="postUp">Post Up{{template "tooltip-with-cheatsheet" (mkCheat "Shell commands to run after the WireGuard interface comes up. Commonly used for iptables NAT/forwarding rules." "server-postup" "Server PostUp / PostDown")}}</label>
                 <textarea class="form-control" id="postUp" name="postUp" rows="3"></textarea>
             </div>
             <div class="form-group">
-                <label for="postDown">Post Down{{template "tooltip" "Shell commands to run after the WireGuard interface goes down. Usually reverses the Post Up rules."}}</label>
+                <label for="postDown">Post Down{{template "tooltip-with-cheatsheet" (mkCheat "Shell commands to run after the WireGuard interface goes down. Usually reverses the Post Up rules." "server-postup" "Server PostUp / PostDown")}}</label>
                 <textarea class="form-control" id="postDown" name="postDown" rows="3"></textarea>
             </div>
             <div>&nbsp;</div>
@@ -87,11 +87,11 @@
                 <input type="text" class="form-control" id="wanAddress" name="wanAddress" value="" required>
             </div>
             <div class="form-group">
-                <label for="supernetCidr">Default Client Supernet CIDR{{template "tooltip" "A broader CIDR range for client Allowed IPs, enabling routing across multiple VPN subnets. Leave empty to use the server's subnet."}}</label>
+                <label for="supernetCidr">Default Client Supernet CIDR{{template "tooltip-with-cheatsheet" (mkCheat "A broader CIDR range for client Allowed IPs, enabling routing across multiple VPN subnets. Leave empty to use the server's subnet." "supernet" "Default Client Supernet CIDR")}}</label>
                 <input type="text" class="form-control" id="supernetCidr" name="supernetCidr" value="">
             </div>
             <div class="form-group">
-                <label for="bridgeNetworks">Bridge Networks{{template "tooltip" "Server-side LANs that clients may bridge into through this VPN. Comma-separated CIDRs (e.g. 192.168.50.0/24, 10.10.0.0/16). Each entry becomes a checkbox on the client form."}}</label>
+                <label for="bridgeNetworks">Bridge Networks{{template "tooltip-with-cheatsheet" (mkCheat "Server-side LANs that clients may bridge into through this VPN. Comma-separated CIDRs (e.g. 192.168.50.0/24, 10.10.0.0/16). Each entry becomes a checkbox on the client form." "bridge-networks" "Bridge Networks")}}</label>
                 <input type="text" class="form-control" id="bridgeNetworks" name="bridgeNetworks" value="" placeholder="192.168.50.0/24, 10.10.0.0/16">
             </div>
             <div class="form-group">

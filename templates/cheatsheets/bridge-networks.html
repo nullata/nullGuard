@@ -1,0 +1,29 @@
+{{define "cheatsheet-bridge-networks"}}
+<h5>Bridge Networks</h5>
+<p>Common server-side networks that clients can opt into from the client form.</p>
+
+<h6>One shared LAN</h6>
+<p>Clients can opt into routing one server-side LAN through the VPN.</p>
+<p>Example:</p>
+<pre><code>192.168.50.0/24</code></pre>
+<hr>
+
+<h6>Multiple shared LANs</h6>
+<p>Clients get one checkbox per network and can choose which LANs to route through the VPN.</p>
+<p>Example:</p>
+<pre><code>192.168.50.0/24, 10.20.0.0/16</code></pre>
+<hr>
+
+<h6>Small services subnet</h6>
+<p>Clients route only a narrow subnet for shared services instead of an entire site LAN.</p>
+<p>Example:</p>
+<pre><code>192.168.50.0/28</code></pre>
+<hr>
+
+<h6>Avoid common home ranges</h6>
+<p>Prefer less common ranges when possible, because overlapping LANs can break local access for users.</p>
+<p>Example:</p>
+<pre><code>10.240.10.0/24</code></pre>
+
+<p class="mb-0">More details: <a href="https://www.wireguard.com/" target="_blank" rel="noopener noreferrer">WireGuard overview</a></p>
+{{end}}

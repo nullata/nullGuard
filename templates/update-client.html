@@ -36,7 +36,7 @@
                 required>
         </div>
         <div class="form-group">
-            <label for="allowedIps">Allowed IPs{{template "tooltip" "IP ranges this client is allowed to access through the VPN. Derived from the server's subnet if left empty. Enable Full Tunnel to route all traffic through the VPN (0.0.0.0/0)."}}</label>
+            <label for="allowedIps">Allowed IPs{{template "tooltip-with-cheatsheet" (mkCheat "IP ranges this client is allowed to access through the VPN. Derived from the server's subnet if left empty. Enable Full Tunnel to route all traffic through the VPN (0.0.0.0/0)." "allowed-ips" "Allowed IPs")}}</label>
             <input type="text" class="form-control" id="allowedIps" name="allowedIps" value="{{.ClientData.AllowedIps}}"
                 required>
         </div>
@@ -50,7 +50,7 @@
         </div>
         {{if .BridgeNetworks}}
         <div class="form-group">
-            <label class="fw-semibold">Bridge Networks{{template "tooltip" "Adds the selected server-side networks to this client's AllowedIPs. Watch out for overlap with the client's own local network."}}</label>
+            <label class="fw-semibold">Bridge Networks{{template "tooltip-with-cheatsheet" (mkCheat "Adds the selected server-side networks to this client's AllowedIPs. Watch out for overlap with the client's own local network." "bridge-networks" "Bridge Networks")}}</label>
             <div id="bridgeNetworksList" class="border rounded p-3 bg-white">
                 {{range $i, $b := .BridgeNetworks}}
                 <div class="form-check">
@@ -81,7 +81,7 @@
         </div>
         {{end}}
         <div class="form-group">
-            <label for="exposedLans">Exposed LANs{{template "tooltip" "Comma-separated CIDRs of local networks reachable through this client. The server will route those subnets to this peer so other clients can reach them. Requires IP forwarding + masquerade on this client's host."}}</label>
+            <label for="exposedLans">Exposed LANs{{template "tooltip-with-cheatsheet" (mkCheat "Comma-separated CIDRs of local networks reachable through this client. The server will route those subnets to this peer so other clients can reach them. Requires IP forwarding + masquerade on this client's host." "exposed-lans" "Exposed LANs")}}</label>
             <input type="text" class="form-control" id="exposedLans" name="exposedLans" value="{{if .ClientData.ExposedLans}}{{.ClientData.ExposedLans}}{{end}}" placeholder="e.g. 192.168.10.0/24">
         </div>
         <div class="form-group">

@@ -1,0 +1,30 @@
+{{define "cheatsheet-exposed-lans"}}
+<h5>Exposed LANs</h5>
+<p>Common networks reachable behind this client, so other peers can route to them through this client.</p>
+
+<h6>Client-side office LAN</h6>
+<p>Other VPN clients can reach a LAN behind this client device.</p>
+<p>Example:</p>
+<pre><code>192.168.10.0/24</code></pre>
+<hr>
+
+<h6>Single device behind client</h6>
+<p>Other VPN clients can reach one specific machine behind this client.</p>
+<p>Example:</p>
+<pre><code>192.168.10.50/32</code></pre>
+<hr>
+
+<h6>Multiple LANs behind client</h6>
+<p>This client acts as the route to more than one local network.</p>
+<p>Example:</p>
+<pre><code>192.168.10.0/24, 192.168.20.0/24</code></pre>
+<hr>
+
+<h6>No exposed LANs</h6>
+<p>This client does not route traffic to anything behind it.</p>
+<p>Example:</p>
+<pre><code>leave blank</code></pre>
+
+<p>The client host still needs OS forwarding and firewall rules for this to work.</p>
+<p class="mb-0">More details: <a href="https://www.wireguard.com/" target="_blank" rel="noopener noreferrer">WireGuard overview</a></p>
+{{end}}
