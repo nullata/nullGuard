@@ -36,7 +36,7 @@
                 required>
         </div>
         <div class="form-group">
-            <label for="allowedIps">Allowed IPs{{template "tooltip" "IP ranges this client is allowed to access through the VPN. Derived from the server's subnet if left empty. Enable Full Tunnel to route all traffic through the VPN (0.0.0.0/0)."}}</label>
+            <label for="allowedIps">Allowed IPs{{template "tooltip-with-cheatsheet" (mkCheat "IP ranges this client is allowed to access through the VPN. Derived from the server's subnet if left empty. Enable Full Tunnel to route all traffic through the VPN (0.0.0.0/0)." "allowed-ips" "Allowed IPs")}}</label>
             <input type="text" class="form-control" id="allowedIps" name="allowedIps" value="{{.ClientData.AllowedIps}}"
                 required>
         </div>

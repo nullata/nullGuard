@@ -11,6 +11,7 @@ import (
 	appcontroller "nullguard/internal/api/http/handlers/app"
 	authcontroller "nullguard/internal/api/http/handlers/auth"
 	clientcontroller "nullguard/internal/api/http/handlers/client"
+	helpcontroller "nullguard/internal/api/http/handlers/help"
 	servercontroller "nullguard/internal/api/http/handlers/server"
 	"nullguard/internal/api/http/middleware"
 	"nullguard/internal/infrastructure/template"
@@ -120,6 +121,9 @@ func SetupRouter() *mux.Router {
 	protected.HandleFunc("/api/v1/set-create-client-session", clientcontroller.SetCreateClientSessionHandler).Methods("POST")
 	protected.HandleFunc("/api/v1/set-update-client-session", clientcontroller.SetClientSessionHandler).Methods("POST")
 	protected.HandleFunc("/api/v1/clear-update-client-session", clientcontroller.ClearClientSessionHandler).Methods("DELETE")
+
+	// in-app field cheatsheets surfaced from clickable tooltip icons
+	protected.HandleFunc("/help/{key}", helpcontroller.CheatsheetHandler).Methods("GET")
 
 	// client config download routes
 	protected.HandleFunc("/api/v1/client/{serverId}/{clientId}/config", clientcontroller.GetClientConfig).Methods("GET")

@@ -182,6 +182,12 @@ footer {
     color: var(--link-color);
 }
 
+/* clickable variant (opens a cheatsheet modal). subtle ring on hover so
+   operators can tell which icons have a deeper doc behind them. */
+.info-tooltip-clickable:hover {
+    text-shadow: 0 0 0 1px var(--link-color);
+}
+
 .info-tooltip .info-tooltip-text {
     visibility: hidden;
     opacity: 0;
