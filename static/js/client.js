@@ -13,6 +13,54 @@ function formatBytes(bytes) {
   return (i === 0 ? value : value.toFixed(2)) + " " + units[i];
 }
 
+function ipv4ToInt(addr) {
+  var ip = String(addr || "").split("/")[0];
+  var parts = ip.split(".");
+  if (parts.length !== 4) return Number.MAX_SAFE_INTEGER;
+  return parts.reduce(function (acc, p) {
+    return acc * 256 + (parseInt(p, 10) || 0);
+  }, 0);
+}
+
+function sortClientList() {
+  var sortBy = $("#sortClient").val() || "address";
+  var $list = $("#clientList");
+  var items = $list.children("li").not(".no-items-mt").detach().toArray();
+  items.sort(function (a, b) {
+    var $a = $(a), $b = $(b);
+    if (sortBy === "active") {
+      var aActive = parseInt($a.attr("data-active"), 10) || 0;
+      var bActive = parseInt($b.attr("data-active"), 10) || 0;
+      if (aActive !== bActive) return bActive - aActive;
+      var aHs = parseInt($a.attr("data-handshake"), 10) || 0;
+      var bHs = parseInt($b.attr("data-handshake"), 10) || 0;
+      return bHs - aHs;
+    }
+    if (sortBy === "traffic") {
+      var aT = parseInt($a.attr("data-traffic"), 10) || 0;
+      var bT = parseInt($b.attr("data-traffic"), 10) || 0;
+      return bT - aT;
+    }
+    if (sortBy === "name") {
+      return ($a.attr("data-name") || "").localeCompare($b.attr("data-name") || "");
+    }
+    return ipv4ToInt($a.attr("data-address")) - ipv4ToInt($b.attr("data-address"));
+  });
+  $list.append(items);
+}
+
+function formatHandshakeAge(lastHandshake) {
+  if (!lastHandshake || lastHandshake <= 0) return "Last handshake: never";
+  var seconds = Math.max(0, Math.floor(Date.now() / 1000 - lastHandshake));
+  if (seconds < 60) return "Last handshake: " + seconds + "s ago";
+  var minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return "Last handshake: " + minutes + "m ago";
+  var hours = Math.floor(minutes / 60);
+  if (hours < 24) return "Last handshake: " + hours + "h ago";
+  var days = Math.floor(hours / 24);
+  return "Last handshake: " + days + "d ago";
+}
+
 // show qr code in a modal
 function showQRCodeModal(serverId, clientId, clientName) {
   const qrCodeUrl = `/api/v1/client/${serverId}/${clientId}/qrcode`;
@@ -200,7 +248,8 @@ $(document).ready(function () {
             // traffic stats
             const $trafficRow = $("<div>")
               .addClass("d-flex justify-content-end text-muted client-traffic")
-              .append($("<span>").append($("<i>").addClass("fas fa-arrow-up client-traffic-icon me-1")).append(formatBytes(client.transferRx)))
+              .append($("<span>").text(formatHandshakeAge(client.lastHandshake)))
+              .append($("<span>").addClass("ms-3").append($("<i>").addClass("fas fa-arrow-up client-traffic-icon me-1")).append(formatBytes(client.transferRx)))
               .append($("<span>").addClass("ms-3").append($("<i>").addClass("fas fa-arrow-down client-traffic-icon me-1")).append(formatBytes(client.transferTx)));
 
             // append elements to their respective parents
@@ -209,10 +258,14 @@ $(document).ready(function () {
             $card.attr("id", client.clientId);
             $card.attr("data-name", client.name.toLowerCase());
             $card.attr("data-address", client.address.toLowerCase());
+            $card.attr("data-active", client.isConnected ? "1" : "0");
+            $card.attr("data-handshake", client.lastHandshake || 0);
+            $card.attr("data-traffic", (client.transferRx || 0) + (client.transferTx || 0));
 
             $("#clientList").append($card);
           });
 
+          sortClientList();
           return;
         }
 
@@ -268,6 +321,8 @@ $(document).ready(function () {
       $("#clientList").append($listEmptySearch);
     }
   });
+
+  $("#sortClient").on("change", sortClientList);
 
   $("#create-client").on("click", function (event) {
     event.preventDefault();

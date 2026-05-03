@@ -218,15 +218,16 @@ func MapClientsToRawData(clients []domain.Client, peerStatuses map[string]server
 	for _, client := range clients {
 		status := peerStatuses[client.PublicKey]
 		rawClients = append(rawClients, models.RawClientData{
-			ID:          json.Number(fmt.Sprintf("%d", client.ID)),
-			Name:        client.Name,
-			AddressCidr: client.AddressCidr,
-			AllowedIps:  client.AllowedIps,
-			DnsServers:  client.DnsServers,
-			Keepalive:   json.Number(fmt.Sprintf("%d", client.Keepalive)), // safe pointer dereference
-			IsConnected: status.IsConnected,
-			TransferRx:  status.TransferRx,
-			TransferTx:  status.TransferTx,
+			ID:            json.Number(fmt.Sprintf("%d", client.ID)),
+			Name:          client.Name,
+			AddressCidr:   client.AddressCidr,
+			AllowedIps:    client.AllowedIps,
+			DnsServers:    client.DnsServers,
+			Keepalive:     json.Number(fmt.Sprintf("%d", client.Keepalive)), // safe pointer dereference
+			IsConnected:   status.IsConnected,
+			LastHandshake: status.LastHandshake,
+			TransferRx:    status.TransferRx,
+			TransferTx:    status.TransferTx,
 		})
 	}
 

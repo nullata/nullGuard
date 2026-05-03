@@ -230,9 +230,10 @@ PrivateKey = %s
 
 // PeerStatus holds connection and traffic data for a single WireGuard peer.
 type PeerStatus struct {
-	IsConnected bool
-	TransferRx  int64 // bytes received by server (client's upload)
-	TransferTx  int64 // bytes sent by server (client's download)
+	IsConnected   bool
+	LastHandshake int64 // unix seconds; 0 if no handshake has occurred
+	TransferRx    int64 // bytes received by server (client's upload)
+	TransferTx    int64 // bytes sent by server (client's download)
 }
 
 // GetPeerStatuses returns connection and traffic info for all peers on the interface.
@@ -268,9 +269,10 @@ func GetPeerStatuses(interfaceName string) map[string]PeerStatus {
 		tx, _ := strconv.ParseInt(fields[6], 10, 64)
 
 		peers[publicKey] = PeerStatus{
-			IsConnected: handshake > 0 && time.Since(time.Unix(handshake, 0)) <= 3*time.Minute,
-			TransferRx:  rx,
-			TransferTx:  tx,
+			IsConnected:   handshake > 0 && time.Since(time.Unix(handshake, 0)) <= 3*time.Minute,
+			LastHandshake: handshake,
+			TransferRx:    rx,
+			TransferTx:    tx,
 		}
 	}
 

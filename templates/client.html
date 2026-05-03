@@ -16,13 +16,24 @@
         </div>
     </div>
 
-    <div>
-        <label for="serverSelect" class="mb-2">Search clients</label>
-        <div class="input-group" style="width: 360px;">
-            <span class="input-group-text">
-                <i class="fas fa-search"></i>
-            </span>
-            <input type="search" id="searchClient" class="form-control" placeholder="Search..." />
+    <div class="d-flex flex-wrap gap-3 align-items-end">
+        <div>
+            <label for="searchClient" class="mb-2">Search clients</label>
+            <div class="input-group" style="width: 360px;">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="search" id="searchClient" class="form-control" placeholder="Search..." />
+            </div>
+        </div>
+        <div>
+            <label for="sortClient" class="mb-2">Sort by</label>
+            <select id="sortClient" class="form-control" style="width: 220px;">
+                <option value="address" selected>Address CIDR</option>
+                <option value="name">Name</option>
+                <option value="active">Active first</option>
+                <option value="traffic">Most traffic</option>
+            </select>
         </div>
     </div>
 

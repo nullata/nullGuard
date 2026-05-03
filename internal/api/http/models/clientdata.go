@@ -20,6 +20,7 @@ type RawClientData struct {
 	ServerSupernetCidr string      `json:"serverSupernet"`
 	ExposedLans        string      `json:"exposedLans"`
 	IsConnected        bool        `json:"isConnected"`
+	LastHandshake      int64       `json:"lastHandshake"`
 	TransferRx         int64       `json:"transferRx"`
 	TransferTx         int64       `json:"transferTx"`
 }
