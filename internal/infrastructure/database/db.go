@@ -9,47 +9,63 @@ import (
 	"log"
 	"time"
 
+	"nullguard/internal/domain"
 	"nullguard/internal/infrastructure/config"
 
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-
-	"nullguard/internal/domain"
 )
 
 var DB *gorm.DB
 
 // initialize the database connection
 func InitDB() {
-	user := config.GetEnv("DB_USER", "")
-	password := config.GetEnv("DB_PASS", "")
-	dbname := config.GetEnv("DB_NAME", "")
-	host := config.GetEnv("DB_HOST", "")
-	port := config.GetEnv("DB_PORT", "")
+	dbType := config.GetEnv("DB_TYPE", "mysql")
 
-	if user == "" || password == "" ||
-		dbname == "" || host == "" || port == "" {
-		log.Fatal("failed to validate database configuration")
+	if dbType == "sqlite" {
+		dbUrl := config.GetEnv("DATABASE_URL", "nullguard.db")
+		var err error
+		DB, err = gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to connect sqlite database: %v", err)
+		}
+	} else {
+		user := config.GetEnv("DB_USER", "")
+		password := config.GetEnv("DB_PASS", "")
+		dbname := config.GetEnv("DB_NAME", "")
+		host := config.GetEnv("DB_HOST", "")
+		port := config.GetEnv("DB_PORT", "")
+
+		if user == "" || password == "" || dbname == "" || host == "" || port == "" {
+			log.Fatal("failed to validate database configuration")
+		}
+
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, dbname)
+		var err error
+		DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to connect database: %v", err)
+		}
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, dbname)
-	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("failed to connect database: %v", err)
-	}
-
-	setConnectionPoolConf()
+	setConnectionPoolConf(dbType)
 
 	migrateModels()
 
-	log.Println("Database connection established")
+	log.Printf("Database connection established using %s", dbType)
 }
 
-func setConnectionPoolConf() {
+func setConnectionPoolConf(dbType string) {
 	sqlDB, err := DB.DB()
 	if err != nil {
 		log.Fatalf("failed to get raw database handle: %v", err)
+	}
+
+	if dbType == "sqlite" {
+		// SQLite allows a single writer; one connection avoids "database is locked" errors
+		sqlDB.SetMaxOpenConns(1)
+		return
 	}
 
 	// connection pool conf
