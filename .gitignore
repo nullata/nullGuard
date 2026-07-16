@@ -5,6 +5,12 @@
 nullguard
 *.exe
 
+# Local SQLite databases
+*.db
+
+# Agent tool working directories
+.vessel_*/
+
 # IDE
 .vscode/
 .idea/
