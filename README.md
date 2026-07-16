@@ -13,7 +13,9 @@ The host or container must have:
 
 ### Database Setup
 
-Create a MySQL/MariaDB database and user for nullguard:
+nullGuard supports MySQL/MariaDB (default) and SQLite, selected with the `DB_TYPE` environment variable. Tables are created automatically on first run.
+
+**MySQL/MariaDB** (`DB_TYPE=mysql`, the default) — create a database and user for nullguard:
 
 ```sql
 CREATE DATABASE nullguard;
@@ -22,18 +24,20 @@ GRANT ALL PRIVILEGES ON nullguard.* TO 'nullguard'@'%';
 FLUSH PRIVILEGES;
 ```
 
-Tables are created automatically on first run.
+**SQLite** (`DB_TYPE=sqlite`) — no database server needed. The database file is created automatically at the path given by `DATABASE_URL` (default `nullguard.db` in the working directory).
 
 ### Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NULLGUARD_PORT` | Port the app listens on | `8080` |
-| `DB_HOST` | MySQL database host | _(required)_ |
-| `DB_PORT` | MySQL database port | _(required)_ |
-| `DB_NAME` | MySQL database name | _(required)_ |
-| `DB_USER` | MySQL database user | _(required)_ |
-| `DB_PASS` | MySQL database password | _(required)_ |
+| `SERVER_PORT` | Port the app listens on | `8080` |
+| `DB_TYPE` | Database backend (`mysql` or `sqlite`) | `mysql` |
+| `DATABASE_URL` | Path to the SQLite database file (only for `sqlite`) | `nullguard.db` |
+| `DB_HOST` | MySQL database host | _(required for `mysql`)_ |
+| `DB_PORT` | MySQL database port | _(required for `mysql`)_ |
+| `DB_NAME` | MySQL database name | _(required for `mysql`)_ |
+| `DB_USER` | MySQL database user | _(required for `mysql`)_ |
+| `DB_PASS` | MySQL database password | _(required for `mysql`)_ |
 | `SESSION_SECRET_KEY` | Secret key for session encryption. Auto-generated if not set. | _(auto)_ |
 | `WG_SERVER_CONF_PATH` | Path to store WireGuard config files | `./` |
 | `AUTO_START_SERVERS` | Automatically start all WireGuard servers on application startup | `false` |
@@ -56,18 +60,61 @@ docker pull nullata/nullguard
 
 #### Docker Compose (Recommended)
 
-Create a `docker-compose.yml` or use the one included in the repository. To use the pre-built image from Docker Hub, replace `build: .` with `image: nullata/nullguard:latest`:
+Create a `docker-compose.yml` or use the one included in the repository. It builds locally (`build: .`) by default — to use the pre-built image from Docker Hub, replace that line with `image: nullata/nullguard:latest`.
+
+**MySQL/MariaDB** (default) — point the `DB_*` variables at your database server:
 
 ```yaml
 services:
   nullguard:
-    image: nullata/nullguard:latest  # Use pre-built image
-    # Or use: build: .  # Build locally
+    image: nullata/nullguard:latest  # Or: build: .
+    ports:
+      - "8080:8080"
+      # WireGuard UDP ports (add udp ports for each WireGuard server instance)
+      - "51820:51820/udp"
+    environment:
+      SERVER_PORT: "8080"
+      DB_TYPE: mysql
+      DB_HOST: ${DB_HOST:-localhost}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-nullguard}
+      DB_USER: ${DB_USER:-nullguard}
+      DB_PASS: ${DB_PASS:-changeme}
+      # ... rest of configuration
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+```
+
+**SQLite** — no database server needed. Drop the `DB_*` variables, set `DB_TYPE` and `DATABASE_URL`, and mount a named volume so the database file persists across container restarts and removals:
+
+```yaml
+services:
+  nullguard:
+    image: nullata/nullguard:latest  # Or: build: .
     ports:
       - "8080:8080"
       - "51820:51820/udp"
-    # ... rest of configuration
+    environment:
+      SERVER_PORT: "8080"
+      DB_TYPE: sqlite
+      DATABASE_URL: /data/nullguard.db
+      # ... rest of configuration
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    volumes:
+      - sqlite_data:/data
+
+volumes:
+  sqlite_data:
 ```
+
+The `docker-compose.yml` in the repository ships with the MySQL variables active and the SQLite lines commented out, so switching backends is a matter of swapping which block is commented.
 
 Then run:
 

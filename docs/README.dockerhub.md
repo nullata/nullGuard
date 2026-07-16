@@ -16,12 +16,12 @@ docker pull nullata/nullguard:latest
 
 ### Docker Compose (Recommended)
 
-Create a `docker-compose.yml`:
+Create a `docker-compose.yml`. This example uses **MySQL/MariaDB**, the default backend — see [SQLite](#sqlite) below for the server-less alternative:
 
 ```yaml
 services:
   nullguard:
-    build: .
+    image: nullata/nullguard:latest
     ports:
       - "8080:8080"
       # WireGuard UDP ports (add udp ports for each WireGuard server instance)
@@ -29,6 +29,7 @@ services:
     environment:
       SERVER_PORT: "8080"
       SERVER_SSL_ENABLED: false
+      DB_TYPE: mysql
       DB_HOST: localhost
       DB_PORT: 3306
       DB_NAME: nullguard
@@ -56,6 +57,35 @@ services:
       - net.ipv4.ip_forward=1
 ```
 
+#### SQLite
+
+To run without a database server, drop the five `DB_*` variables and use SQLite instead. Mount a named volume so the database file persists across container restarts and removals:
+
+```yaml
+services:
+  nullguard:
+    image: nullata/nullguard:latest
+    ports:
+      - "8080:8080"
+      - "51820:51820/udp"
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_SSL_ENABLED: false
+      DB_TYPE: sqlite
+      DATABASE_URL: /data/nullguard.db
+      # ... same optional values as above
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+    volumes:
+      - sqlite_data:/data
+
+volumes:
+  sqlite_data:
+```
+
 Then run:
 
 ```bash
@@ -73,11 +103,13 @@ The container requires:
 - **NET_ADMIN** capability (for managing WireGuard interfaces)
 - **net.ipv4.ip_forward=1** sysctl (for routing VPN traffic)
 - **wireguard-tools** (included in the image)
-- **MySQL/MariaDB** database
+- **MySQL/MariaDB or SQLite** database
 
 ### Database Setup
 
-Create a MySQL/MariaDB database and user:
+nullGuard supports MySQL/MariaDB (default) and SQLite, selected with the `DB_TYPE` environment variable. Tables are created automatically on first run.
+
+**MySQL/MariaDB** (`DB_TYPE=mysql`, the default) — create a database and user for nullguard:
 
 ```sql
 CREATE DATABASE nullguard;
@@ -86,18 +118,20 @@ GRANT ALL PRIVILEGES ON nullguard.* TO 'nullguard'@'%';
 FLUSH PRIVILEGES;
 ```
 
-Tables are created automatically on first run.
+**SQLite** (`DB_TYPE=sqlite`) — no database server needed. The database file is created automatically at the path given by `DATABASE_URL` (default `nullguard.db` in the working directory).
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NULLGUARD_PORT` | Port the app listens on | `8080` |
-| `DB_HOST` | MySQL database host | _(required)_ |
-| `DB_PORT` | MySQL database port | _(required)_ |
-| `DB_NAME` | MySQL database name | _(required)_ |
-| `DB_USER` | MySQL database user | _(required)_ |
-| `DB_PASS` | MySQL database password | _(required)_ |
+| `SERVER_PORT` | Port the app listens on | `8080` |
+| `DB_TYPE` | Database backend (`mysql` or `sqlite`) | `mysql` |
+| `DATABASE_URL` | Path to the SQLite database file (only for `sqlite`) | `nullguard.db` |
+| `DB_HOST` | MySQL database host | _(required for `mysql`)_ |
+| `DB_PORT` | MySQL database port | _(required for `mysql`)_ |
+| `DB_NAME` | MySQL database name | _(required for `mysql`)_ |
+| `DB_USER` | MySQL database user | _(required for `mysql`)_ |
+| `DB_PASS` | MySQL database password | _(required for `mysql`)_ |
 | `SESSION_SECRET_KEY` | Secret key for session encryption | _(auto-generated)_ |
 | `WG_SERVER_CONF_PATH` | Path to store WireGuard config files | `./` |
 | `AUTO_START_SERVERS` | Auto-start all WireGuard servers on startup | `false` |
