@@ -85,6 +85,20 @@ function downloadClientConfig(serverId, clientId) {
 }
 
 $(document).ready(function () {
+  // valid values for the sort dropdown, used to validate the stored value
+  var CLIENT_SORT_VALUES = ["address", "name", "active", "traffic"];
+
+  // restore the previously saved sort option (falls back to the default "address")
+  function initClientSort() {
+    var $select = $("#sortClient");
+    if (!$select.length) return;
+    var saved = localStorage.getItem("clientSort");
+    if (saved && CLIENT_SORT_VALUES.indexOf(saved) !== -1) {
+      $select.val(saved);
+    }
+  }
+  initClientSort();
+
   function deleteClient(clientId, clientName, serverId) {
     var server = $("#serverSelect");
     if (server.val() === serverId) {
@@ -322,7 +336,10 @@ $(document).ready(function () {
     }
   });
 
-  $("#sortClient").on("change", sortClientList);
+  $("#sortClient").on("change", function () {
+    localStorage.setItem("clientSort", $(this).val());
+    sortClientList();
+  });
 
   $("#create-client").on("click", function (event) {
     event.preventDefault();
