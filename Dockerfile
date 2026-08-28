@@ -19,6 +19,7 @@ WORKDIR /app
 
 COPY --from=builder /build/nullguard .
 COPY --from=builder /build/banner.txt .
+COPY --from=builder /build/VERSION .
 COPY --from=builder /build/templates ./templates
 COPY --from=builder /build/static ./static
 

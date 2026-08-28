@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"nullguard/internal/api/http/middleware"
+	"nullguard/internal/infrastructure/version"
 )
 
 var baseTemplate *template.Template
@@ -82,9 +83,10 @@ func cloneBaseTemplate(files ...string) (*template.Template, error) {
 }
 
 func TemplateHandler(w http.ResponseWriter, template string, data interface{}) {
-	// inject session max age into template data for client-side auto-logout
+	// inject session max age and application version into template data
 	if m, ok := data.(map[string]interface{}); ok {
 		m["SessionMaxAge"] = middleware.GetSessionMaxAge()
+		m["Version"] = version.Get()
 	}
 
 	// clone the template for rendering the page

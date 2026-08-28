@@ -5,12 +5,10 @@
 package server
 
 import (
-	"errors"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"nullguard/internal/api/http/models"
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
@@ -50,9 +48,8 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := serverservice.CreateServer(server); err != nil {
-		var mysqlErr *mysql.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-			// MySQL error 1062: Duplicate entry for key
+		if isDuplicateEntryError(err) {
+			// duplicate unique-constraint violation (any database backend)
 			httputil.SendJSONResponse(w, http.StatusConflict, constants.StatusError, "A server configuration using the same properties already exists", nil)
 			return
 		}

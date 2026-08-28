@@ -14,6 +14,7 @@ import (
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -29,6 +30,24 @@ func InitDB() {
 		DB, err = gorm.Open(sqlite.Open(dbUrl), &gorm.Config{})
 		if err != nil {
 			log.Fatalf("failed to connect sqlite database: %v", err)
+		}
+	} else if dbType == "postgres" {
+		user := config.GetEnv("DB_USER", "")
+		password := config.GetEnv("DB_PASS", "")
+		dbname := config.GetEnv("DB_NAME", "")
+		host := config.GetEnv("DB_HOST", "")
+		port := config.GetEnv("DB_PORT", "")
+
+		if user == "" || password == "" || dbname == "" || host == "" || port == "" {
+			log.Fatal("failed to validate database configuration")
+		}
+
+		sslmode := config.GetEnv("DB_SSLMODE", "disable")
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=UTC", host, user, password, dbname, port, sslmode)
+		var err error
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("failed to connect postgres database: %v", err)
 		}
 	} else {
 		user := config.GetEnv("DB_USER", "")

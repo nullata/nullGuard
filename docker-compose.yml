@@ -16,6 +16,11 @@ services:
       DB_NAME: ${DB_NAME:-nullguard}
       DB_USER: ${DB_USER:-nullguard}
       DB_PASS: ${DB_PASS:-changeme}
+      # --- Database: PostgreSQL (alternative) ---
+      # To use PostgreSQL instead of MySQL:
+      #   1. Comment out the DB_* variables above, set DB_TYPE: postgres,
+      #      and uncomment the postgres block at the bottom of this file
+      # DB_TYPE: postgres
       # --- Database: SQLite (alternative, no MySQL server needed) ---
       # To use SQLite instead of MySQL:
       #   1. Comment out the DB_* variables above
@@ -50,4 +55,17 @@ services:
 # Uncomment for SQLite
 # volumes:
 #   sqlite_data:
+
+# Uncomment for PostgreSQL
+#   postgres:
+#     image: postgres:16-alpine
+#     environment:
+#       POSTGRES_DB: nullguard
+#       POSTGRES_USER: nullguard
+#       POSTGRES_PASSWORD: changeme
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#
+# volumes:
+#   postgres_data:
 

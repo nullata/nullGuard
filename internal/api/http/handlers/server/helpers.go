@@ -5,15 +5,34 @@
 package server
 
 import (
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
+	"github.com/go-sql-driver/mysql"
+	pgxpgconn "github.com/jackc/pgx/v5/pgconn"
 	"nullguard/internal/api/http/models"
 	"nullguard/internal/domain"
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
 	serverservice "nullguard/internal/service/server"
 )
+
+// isDuplicateEntryError reports whether a repository error is a unique-constraint
+// violation, regardless of the active database backend (MySQL error 1062,
+// PostgreSQL SQLSTATE 23505, or SQLite "UNIQUE constraint failed").
+func isDuplicateEntryError(err error) bool {
+	var mysqlErr *mysql.MySQLError
+	if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+		return true
+	}
+	var pgErr *pgxpgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+		return true
+	}
+	return err != nil && strings.Contains(err.Error(), "UNIQUE constraint failed")
+}
 
 // validateAndGetServer handles common validation logic for server operations.
 // It validates the HTTP method, decodes the request body, validates deploy data,

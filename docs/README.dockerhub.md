@@ -16,7 +16,7 @@ docker pull nullata/nullguard:latest
 
 ### Docker Compose (Recommended)
 
-Create a `docker-compose.yml`. This example uses **MySQL/MariaDB**, the default backend — see [SQLite](#sqlite) below for the server-less alternative:
+Create a `docker-compose.yml`. This example uses **MySQL/MariaDB**, the default backend — see [PostgreSQL](#postgresql) and [SQLite](#sqlite) below for the alternatives:
 
 ```yaml
 services:
@@ -57,6 +57,37 @@ services:
       - net.ipv4.ip_forward=1
 ```
 
+#### PostgreSQL
+
+To use **PostgreSQL** (`DB_TYPE=postgres`), point the `DB_*` variables at your Postgres server and optionally set `DB_SSLMODE` (default `disable` — a dev default; use `require` or `verify-full` for a remote server):
+
+```yaml
+services:
+  nullguard:
+    image: nullata/nullguard:latest
+    ports:
+      - "8080:8080"
+      - "51820:51820/udp"
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_SSL_ENABLED: false
+      DB_TYPE: postgres
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: nullguard
+      DB_USER: nullguard
+      DB_PASS: changeme
+      DB_SSLMODE: disable
+      # ... same optional values as above
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+```
+
+Note one behavioral difference from MySQL: Postgres unique indexes are **case-sensitive**, so e.g. two admin usernames differing only by case are allowed on Postgres but not on MySQL's default collation.
+
 #### SQLite
 
 To run without a database server, drop the five `DB_*` variables and use SQLite instead. Mount a named volume so the database file persists across container restarts and removals:
@@ -86,6 +117,8 @@ volumes:
   sqlite_data:
 ```
 
+Note that switching an existing deployment between backends is not an in-app migration — copy the data separately (e.g. `mysqldump`/`pg_dump`), since `AutoMigrate` only handles fresh schemas.
+
 Then run:
 
 ```bash
@@ -103,11 +136,11 @@ The container requires:
 - **NET_ADMIN** capability (for managing WireGuard interfaces)
 - **net.ipv4.ip_forward=1** sysctl (for routing VPN traffic)
 - **wireguard-tools** (included in the image)
-- **MySQL/MariaDB or SQLite** database
+- **MySQL/MariaDB, PostgreSQL, or SQLite** database
 
 ### Database Setup
 
-nullGuard supports MySQL/MariaDB (default) and SQLite, selected with the `DB_TYPE` environment variable. Tables are created automatically on first run.
+nullGuard supports MySQL/MariaDB (default), PostgreSQL, and SQLite, selected with the `DB_TYPE` environment variable. Tables are created automatically on first run.
 
 **MySQL/MariaDB** (`DB_TYPE=mysql`, the default) — create a database and user for nullguard:
 
@@ -118,6 +151,8 @@ GRANT ALL PRIVILEGES ON nullguard.* TO 'nullguard'@'%';
 FLUSH PRIVILEGES;
 ```
 
+**PostgreSQL** (`DB_TYPE=postgres`) — point `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASS` at your Postgres server. TLS is controlled by `DB_SSLMODE` (default `disable`, a dev default — set `require` or `verify-full` for remote servers). One behavioral difference from MySQL: Postgres unique indexes are **case-sensitive**, so e.g. two admin usernames differing only by case are allowed on Postgres but not on MySQL's default collation.
+
 **SQLite** (`DB_TYPE=sqlite`) — no database server needed. The database file is created automatically at the path given by `DATABASE_URL` (default `nullguard.db` in the working directory).
 
 ## Environment Variables
@@ -125,13 +160,14 @@ FLUSH PRIVILEGES;
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `SERVER_PORT` | Port the app listens on | `8080` |
-| `DB_TYPE` | Database backend (`mysql` or `sqlite`) | `mysql` |
+| `DB_TYPE` | Database backend (`mysql`, `postgres`, or `sqlite`) | `mysql` |
 | `DATABASE_URL` | Path to the SQLite database file (only for `sqlite`) | `nullguard.db` |
-| `DB_HOST` | MySQL database host | _(required for `mysql`)_ |
-| `DB_PORT` | MySQL database port | _(required for `mysql`)_ |
-| `DB_NAME` | MySQL database name | _(required for `mysql`)_ |
-| `DB_USER` | MySQL database user | _(required for `mysql`)_ |
-| `DB_PASS` | MySQL database password | _(required for `mysql`)_ |
+| `DB_SSLMODE` | Postgres TLS mode (only for `postgres`). `disable` is only a dev default — use `require` (or `verify-full`) for any non-local Postgres server | `disable` |
+| `DB_HOST` | Database host | _(required for `mysql`/`postgres`)_ |
+| `DB_PORT` | Database port | _(required for `mysql`/`postgres`)_ |
+| `DB_NAME` | Database name | _(required for `mysql`/`postgres`)_ |
+| `DB_USER` | Database user | _(required for `mysql`/`postgres`)_ |
+| `DB_PASS` | Database password | _(required for `mysql`/`postgres`)_ |
 | `SESSION_SECRET_KEY` | Secret key for session encryption | _(auto-generated)_ |
 | `WG_SERVER_CONF_PATH` | Path to store WireGuard config files | `./` |
 | `AUTO_START_SERVERS` | Auto-start all WireGuard servers on startup | `false` |
@@ -243,6 +279,7 @@ All responses follow this format:
 | POST | `/api/v1/deploy-server` | Start a server |
 | POST | `/api/v1/stop-server` | Stop a server |
 | POST | `/api/v1/restart-server` | Restart a running server |
+| POST | `/api/v1/toggle-auto-restart` | Enable/disable auto-restart on client changes |
 
 ### Client Endpoints
 
