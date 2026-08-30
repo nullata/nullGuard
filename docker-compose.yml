@@ -48,13 +48,20 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
-    # Uncomment for SQLite (stores /data/nullguard.db in a named volume)
-    # volumes:
-    #   - sqlite_data:/data
+    volumes:
+      # Persist WireGuard server configs across container recreation so that
+      # wg-quick down/restart keeps working after `compose up -d` recreates
+      # the container. Without this, /etc/wireguard lives only in the
+      # container's writable layer and is wiped on recreation, leaving the
+      # kernel wg0 interface up but with no .conf for wg-quick to read.
+      - wg_conf:/etc/wireguard
+      # Uncomment for SQLite (stores /data/nullguard.db in a named volume)
+      # - sqlite_data:/data
 
-# Uncomment for SQLite
-# volumes:
-#   sqlite_data:
+volumes:
+  wg_conf:
+  # Uncomment for SQLite
+  # sqlite_data:
 
 # Uncomment for PostgreSQL
 #   postgres:

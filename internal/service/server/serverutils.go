@@ -280,20 +280,24 @@ func GetPeerStatuses(interfaceName string) map[string]PeerStatus {
 }
 
 func IsServerActive(server domain.Server) (bool, error) {
-	cmd := exec.Command("wg", "show")
+	// `wg show interfaces` prints just a whitespace-separated list of live
+	// WireGuard interface names, which lets us match exactly. Using
+	// `wg show` + strings.Contains is fragile: peer comments, public keys,
+	// or another interface whose name contains ours (e.g. "wg0" inside
+	// "wg01") would produce false positives.
+	cmd := exec.Command("wg", "show", "interfaces")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		return false, fmt.Errorf("Error running wg command: %v", err)
 	}
 
-	output := out.String()
-	if strings.Contains(output, server.InterfaceName) {
-		return true, nil
+	for _, iface := range strings.Fields(out.String()) {
+		if iface == server.InterfaceName {
+			return true, nil
+		}
 	}
-
 	return false, nil
 }
 
@@ -325,12 +329,50 @@ func DeleteServerConf(server domain.Server) error {
 }
 
 func StopServer(server domain.Server) error {
+	// wg-quick down needs the .conf file to tear the interface down cleanly
+	// (it runs the PostDown hooks from it). If the file is missing - typically
+	// because /etc/wireguard was wiped by a container recreation while the
+	// kernel wg0 interface survived - regenerate it from the DB first so
+	// wg-quick has something to read. If wg-quick still fails but the
+	// interface exists, fall back to `ip link delete` so the operator isn't
+	// stuck with a "running" server they can't stop.
+	serverConfigPath, pathErr := getNormalizedServerConfigPath()
+	if pathErr == nil {
+		fullConfigPath := serverConfigPath + server.InterfaceName + constants.WgServerConfExt
+		if !utils.FileExists(fullConfigPath) {
+			log.Printf("Server config missing at %s; regenerating from DB before stop", fullConfigPath)
+			if err := GenerateServerConfig(server); err != nil {
+				log.Printf("Failed to regenerate config for %s before stop: %v", server.InterfaceName, err)
+			}
+		}
+	}
+
 	cmd := exec.Command("wg-quick", "down", server.InterfaceName)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to stop server %s: %s", server.InterfaceName, stderr.String())
+		wgQuickErr := stderr.String()
+
+		// Last-resort teardown: if the kernel interface is still up, drop it
+		// with `ip link delete`. This skips the PostDown hooks (leftover
+		// iptables rules will need to be cleaned separately), but it does
+		// unblock stop/restart on a mismatched-state server.
+		if active, checkErr := IsServerActive(server); checkErr == nil && active {
+			log.Printf("wg-quick down failed for %s (%s); falling back to `ip link delete`",
+				server.InterfaceName, strings.TrimSpace(wgQuickErr))
+			ipCmd := exec.Command("ip", "link", "delete", server.InterfaceName)
+			var ipStderr bytes.Buffer
+			ipCmd.Stderr = &ipStderr
+			if ipErr := ipCmd.Run(); ipErr != nil {
+				return fmt.Errorf("failed to stop server %s: wg-quick: %s; ip link delete: %s",
+					server.InterfaceName, strings.TrimSpace(wgQuickErr), strings.TrimSpace(ipStderr.String()))
+			}
+			log.Printf("Server stopped via ip link delete: %s", server.InterfaceName)
+			return nil
+		}
+
+		return fmt.Errorf("failed to stop server %s: %s", server.InterfaceName, wgQuickErr)
 	}
 
 	log.Printf("Server stopped: %s", server.InterfaceName)
