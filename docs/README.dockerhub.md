@@ -43,7 +43,6 @@ services:
       WG_SERVER_DEFAULT_PORT: 51820
       WG_SERVER_DEFAULT_SUPERNET: 128.0.0.0/1, 0.0.0.0/1
       WG_SERVER_DEFAULT_KEEPALIVE: 30
-      WG_SERVER_DEFAULT_CONF_PATH: /etc/wireguard
       WG_SERVER_CONF_PATH: /etc/wireguard
       WG_CLIENT_DEFAULT_NAME: my-wg-client
       AUTO_START_SERVERS: false

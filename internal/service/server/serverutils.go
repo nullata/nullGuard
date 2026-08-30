@@ -330,15 +330,26 @@ func DeleteServerConf(server domain.Server) error {
 
 func StopServer(server domain.Server) error {
 	// wg-quick down needs the .conf file to tear the interface down cleanly
-	// (it runs the PostDown hooks from it). If the file is missing - typically
-	// because /etc/wireguard was wiped by a container recreation while the
-	// kernel wg0 interface survived - regenerate it from the DB first so
-	// wg-quick has something to read. If wg-quick still fails but the
-	// interface exists, fall back to `ip link delete` so the operator isn't
-	// stuck with a "running" server they can't stop.
+	// (it runs the PostDown hooks from it). Two failure modes are worth
+	// handling explicitly here:
+	//
+	//   1. Passing just the interface name to `wg-quick down` makes it look
+	//      up its default path (/etc/wireguard/<iface>.conf), which is only
+	//      right when WG_SERVER_CONF_PATH also points there. StartServer
+	//      already passes the full config path for the same reason; we do
+	//      the same on the down path so both sides stay symmetric.
+	//   2. The config file may be missing entirely - typically because
+	//      /etc/wireguard was wiped by a container recreation while the
+	//      kernel wg0 interface survived. Regenerate from the DB before
+	//      calling wg-quick so it has something to read.
+	//
+	// If wg-quick still fails and the kernel interface is up, fall back to
+	// `ip link delete` so the operator isn't stuck with a "running" server
+	// they can't stop.
+	var fullConfigPath string
 	serverConfigPath, pathErr := getNormalizedServerConfigPath()
 	if pathErr == nil {
-		fullConfigPath := serverConfigPath + server.InterfaceName + constants.WgServerConfExt
+		fullConfigPath = serverConfigPath + server.InterfaceName + constants.WgServerConfExt
 		if !utils.FileExists(fullConfigPath) {
 			log.Printf("Server config missing at %s; regenerating from DB before stop", fullConfigPath)
 			if err := GenerateServerConfig(server); err != nil {
@@ -347,7 +358,13 @@ func StopServer(server domain.Server) error {
 		}
 	}
 
-	cmd := exec.Command("wg-quick", "down", server.InterfaceName)
+	// Prefer the full path so wg-quick reads the same file the app writes;
+	// fall back to the bare interface name only if we couldn't resolve one.
+	wgQuickTarget := server.InterfaceName
+	if fullConfigPath != "" {
+		wgQuickTarget = fullConfigPath
+	}
+	cmd := exec.Command("wg-quick", "down", wgQuickTarget)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
