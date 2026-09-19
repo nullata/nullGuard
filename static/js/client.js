@@ -280,13 +280,14 @@ $(document).ready(function () {
           });
 
           sortClientList();
+          // re-apply the active search filter so polling refreshes don't wipe it
+          applyClientSearch();
           return;
         }
 
-        const $listEmptyDefault = buildDefaultListItem(
-          "No clients configured.",
-        );
-        $("#clientList").append($listEmptyDefault);
+        // no data: let applyClientSearch pick the right message
+        // ("No clients configured." or "No clients found." while searching)
+        applyClientSearch();
       },
       error: function (xhr, status, error) {
         // Only show modal if NOT a background poll
@@ -300,9 +301,9 @@ $(document).ready(function () {
   }
 
   // dynamic search
-  // input instead of keyup because keyup does not work if x in the search field is pressed to clear it
-  $("#searchClient").on("input", function () {
-    const query = $(this).val().toLowerCase();
+  // applied on every client-list (re)load too, so the 5s poll keeps the active filter
+  function applyClientSearch() {
+    const query = String($("#searchClient").val() || "").toLowerCase();
     let visibleCount = 0;
 
     $("#clientList li").each(function () {
@@ -334,7 +335,10 @@ $(document).ready(function () {
       const $listEmptySearch = buildDefaultListItem("No clients found.");
       $("#clientList").append($listEmptySearch);
     }
-  });
+  }
+
+  // input instead of keyup because keyup does not work if x in the search field is pressed to clear it
+  $("#searchClient").on("input", applyClientSearch);
 
   $("#sortClient").on("change", function () {
     localStorage.setItem("clientSort", $(this).val());
