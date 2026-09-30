@@ -10,6 +10,8 @@ import (
 
 	"nullguard/internal/domain"
 	"nullguard/internal/infrastructure/database"
+
+	"gorm.io/gorm"
 )
 
 // CreateApiToken creates a new API token in the database
@@ -52,10 +54,18 @@ func ListApiTokensByAdminID(adminID uint) ([]domain.ApiToken, error) {
 	return tokens, nil
 }
 
-// UpdateApiToken updates an existing API token
-func UpdateApiToken(token *domain.ApiToken) error {
-	if err := database.DB.Save(token).Error; err != nil {
-		log.Printf("Error updating API token: %v", err)
+// TouchApiTokenLastUsed records the last-used timestamp and IP for a token.
+// It only ever updates those two columns, and only while the token is not
+// revoked, so a concurrent revoke can never be clobbered by a write-back
+// of a stale row (which a full-row Save could do).
+func TouchApiTokenLastUsed(id uint, usedByIP string) error {
+	if err := database.DB.Model(&domain.ApiToken{}).
+		Where("id = ? AND revoked_at IS NULL", id).
+		UpdateColumns(map[string]any{
+			"last_used_at": time.Now(),
+			"last_used_ip": usedByIP,
+		}).Error; err != nil {
+		log.Printf("Error updating API token last used: %v", err)
 		return err
 	}
 	return nil
@@ -74,7 +84,7 @@ func RevokeApiToken(id uint, adminID uint) error {
 	}
 
 	if result.RowsAffected == 0 {
-		return database.DB.Error // token not found or doesnt belong to admin
+		return gorm.ErrRecordNotFound // token not found or doesn't belong to admin
 	}
 
 	return nil

@@ -6,6 +6,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -19,6 +20,7 @@ import (
 	"nullguard/internal/service/auth"
 
 	"github.com/gorilla/mux"
+	"gorm.io/gorm"
 )
 
 // CreateApiTokenHandler creates a new API token
@@ -132,6 +134,10 @@ func RevokeApiTokenHandler(w http.ResponseWriter, r *http.Request) {
 
 	// revoke token
 	if err := auth.RevokeApiToken(uint(tokenID), adminID); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			httputil.SendJSONResponse(w, http.StatusNotFound, constants.StatusError, "Token not found", nil)
+			return
+		}
 		log.Printf("Error revoking API token: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "Failed to revoke token", nil)
 		return

@@ -80,12 +80,9 @@ func ValidateApiToken(tokenString string, usedByIP string) (*domain.ApiToken, er
 		return nil, errors.New("token is revoked or expired")
 	}
 
-	// update last used timestamp and IP
-	now := time.Now()
-	token.LastUsedAt = &now
-	token.LastUsedIP = usedByIP
-
-	if err := repository.UpdateApiToken(token); err != nil {
+	// update last used timestamp and IP (targeted columns only, so a
+	// concurrent revoke is never overwritten by a stale full-row write)
+	if err := repository.TouchApiTokenLastUsed(token.ID, usedByIP); err != nil {
 		// log the error but dont fail the authentication
 		// the token is still valid even if we cant update the last used time
 		log.Printf("Warning: failed to update token last used time: %v", err)
