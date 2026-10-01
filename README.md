@@ -42,6 +42,7 @@ FLUSH PRIVILEGES;
 | `DB_USER` | Database user | _(required for `mysql`/`postgres`)_ |
 | `DB_PASS` | Database password | _(required for `mysql`/`postgres`)_ |
 | `SESSION_SECRET_KEY` | Secret key for session encryption. Auto-generated if not set. | _(auto)_ |
+| `TRUSTED_PROXIES` | Comma-separated CIDRs/IPs of reverse proxies allowed to set `X-Forwarded-For`/`X-Real-IP`. Empty = never trust forwarded headers; the direct connection IP is always recorded. Set when running behind a proxy, e.g. `127.0.0.1/32,::1/128` | _(empty)_ |
 | `WG_SERVER_CONF_PATH` | Path to store WireGuard config files | `./` |
 | `AUTO_START_SERVERS` | Automatically start all WireGuard servers on application startup | `false` |
 | `ENV` | Set to `production` for secure session cookies (HTTPS) | _(empty)_ |

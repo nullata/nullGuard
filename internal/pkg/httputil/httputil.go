@@ -7,11 +7,14 @@ package httputil
 import (
 	"encoding/json"
 	"log"
+	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"nullguard/internal/api/http/models"
+	"nullguard/internal/infrastructure/config"
 	"nullguard/internal/pkg/constants"
 )
 
@@ -90,29 +93,129 @@ func ValidateAndDecodeJSON[T any](w http.ResponseWriter, r *http.Request, expect
 	return &data, true
 }
 
-// GetClientIP extracts the client IP address from the request
+// trustedProxies caches the parsed TRUSTED_PROXIES env value, re-parsing
+// only when the raw env string changes (so tests using t.Setenv see the
+// new value immediately).
+var (
+	trustedProxiesMu   sync.Mutex
+	trustedProxiesRaw  string
+	trustedProxiesInit bool
+	trustedProxies     []*net.IPNet
+)
+
+// parseTrustedProxies parses TRUSTED_PROXIES: a comma-separated list of CIDR
+// notations (a bare IP is accepted and treated as /32 or /128). Entries that
+// fail to parse are logged and skipped. An empty/absent value means no proxy
+// is ever trusted and forwarded headers are ignored entirely.
+func parseTrustedProxies() []*net.IPNet {
+	raw := config.GetEnv("TRUSTED_PROXIES", "")
+
+	trustedProxiesMu.Lock()
+	defer trustedProxiesMu.Unlock()
+	if trustedProxiesInit && trustedProxiesRaw == raw {
+		return trustedProxies
+	}
+
+	var nets []*net.IPNet
+	for _, entry := range strings.Split(raw, ",") {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		if !strings.Contains(entry, "/") {
+			ip := net.ParseIP(entry)
+			if ip == nil {
+				log.Printf("TRUSTED_PROXIES: ignoring unparseable entry %q", entry)
+				continue
+			}
+			if ip.To4() != nil {
+				entry += "/32"
+			} else {
+				entry += "/128"
+			}
+		}
+		_, ipnet, err := net.ParseCIDR(entry)
+		if err != nil {
+			log.Printf("TRUSTED_PROXIES: ignoring unparseable entry %q", entry)
+			continue
+		}
+		nets = append(nets, ipnet)
+	}
+
+	trustedProxiesRaw = raw
+	trustedProxiesInit = true
+	trustedProxies = nets
+	return nets
+}
+
+func isTrustedProxy(ip net.IP, proxies []*net.IPNet) bool {
+	for _, p := range proxies {
+		if p.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetClientIP extracts the client IP address from the request.
+//
+// X-Forwarded-For / X-Real-IP are honored ONLY when the direct TCP peer
+// (RemoteAddr) falls inside a CIDR from TRUSTED_PROXIES (comma-separated;
+// default empty = never trust forwarded headers). Unconditionally trusting
+// those headers let any direct client spoof the recorded audit IPs (#17).
+//
+// When the peer is trusted, X-Forwarded-For is walked right-to-left: each
+// rightmost entry that is itself a trusted proxy is skipped, and the first
+// remaining address is returned. This is the only position a client cannot
+// forge past a well-behaved appending proxy (leftmost entries are
+// client-controlled whenever a proxy forwards them verbatim).
+//
+// The RemoteAddr fallback uses net.SplitHostPort, which handles IPv6
+// bracket notation ([::1]:1234 -> ::1) that a naive LastIndex(":") split
+// mangled.
 func GetClientIP(r *http.Request) string {
-	// try x-forwarded-for header first (for proxies)
-	forwarded := r.Header.Get("X-Forwarded-For")
-	if forwarded != "" {
-		// x-forwarded-for can contain multiple ips, take the first one
-		ips := strings.Split(forwarded, ",")
-		if len(ips) > 0 {
-			return strings.TrimSpace(ips[0])
+	// direct peer address, port stripped the IPv6-aware way
+	peerHost, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		// RemoteAddr without a port (rare; e.g. some proxies/Unix) —
+		// treat the whole string as the address
+		peerHost = r.RemoteAddr
+	}
+	peerIP := net.ParseIP(strings.TrimSpace(peerHost))
+
+	proxies := parseTrustedProxies()
+	if peerIP == nil || len(proxies) == 0 || !isTrustedProxy(peerIP, proxies) {
+		if peerIP != nil {
+			return peerIP.String()
+		}
+		return strings.TrimSpace(peerHost)
+	}
+
+	// peer is a trusted proxy: X-Forwarded-For wins, walked right-to-left
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		entries := strings.Split(xff, ",")
+		for i := len(entries) - 1; i >= 0; i-- {
+			candidate := net.ParseIP(strings.TrimSpace(entries[i]))
+			if candidate == nil {
+				// unparseable entry in the middle: stop here; whatever we
+				// have walked so far is untrustworthy
+				break
+			}
+			if !isTrustedProxy(candidate, proxies) {
+				return candidate.String()
+			}
+		}
+		// every entry was a trusted proxy (or unparseable): fall through
+	}
+
+	if realIP := r.Header.Get("X-Real-IP"); realIP != "" {
+		if ip := net.ParseIP(strings.TrimSpace(realIP)); ip != nil {
+			return ip.String()
 		}
 	}
 
-	// try x-real-ip header
-	realIP := r.Header.Get("X-Real-IP")
-	if realIP != "" {
-		return realIP
+	if peerIP != nil {
+		return peerIP.String()
 	}
-
-	// fall back to remoteaddr
-	ip := r.RemoteAddr
-	// remove port if present
-	if idx := strings.LastIndex(ip, ":"); idx != -1 {
-		ip = ip[:idx]
-	}
-	return ip
+	return strings.TrimSpace(peerHost)
 }
