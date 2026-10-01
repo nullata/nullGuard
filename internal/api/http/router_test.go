@@ -157,3 +157,37 @@ func TestRouter_SetupRefusedAfterAdminExists(t *testing.T) {
 		t.Fatal("mallory was persisted despite refused setup")
 	}
 }
+
+// AGENTS.md rule: /api/v1/tokens* are session-only even though the shared
+// bearer middleware lets a valid token through - each handler re-reads the
+// session store for admin_id and must 401 a bearer-only request. Pinning
+// all three methods.
+func TestRouter_TokensEndpointsRejectBearerAuth(t *testing.T) {
+	testutil.NewTestDB(t)
+	httpsess.InitTestStore(t)
+	seedAdmin(t)
+
+	plain, _, err := auth.GenerateApiToken(1, "smoke", 0, "")
+	if err != nil {
+		t.Fatalf("GenerateApiToken: %v", err)
+	}
+
+	r := router.SetupRouter()
+	cases := []struct {
+		method, path string
+	}{
+		{http.MethodGet, "/api/v1/tokens"},
+		{http.MethodPost, "/api/v1/tokens"},
+		{http.MethodDelete, "/api/v1/tokens/1"},
+	}
+	for _, tc := range cases {
+		req := httptest.NewRequest(tc.method, tc.path, nil)
+		req.Header.Set("Authorization", "Bearer "+plain)
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		if rec.Code != http.StatusUnauthorized {
+			t.Fatalf("%s %s with bearer: status %d, want 401 (token self-management must be session-only)",
+				tc.method, tc.path, rec.Code)
+		}
+	}
+}

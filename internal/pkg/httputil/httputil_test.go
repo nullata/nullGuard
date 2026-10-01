@@ -128,3 +128,26 @@ func TestGetClientIP_MalformedTrustedProxiesEntriesSkipped(t *testing.T) {
 		t.Fatalf("valid entry must still work despite malformed siblings; got %q", got)
 	}
 }
+
+func TestGetClientIP_UntrustedIPv6PeerIgnoresXFF(t *testing.T) {
+	// no trusted proxies at all: spoofed XFF from a direct IPv6 peer is ignored
+	t.Setenv("TRUSTED_PROXIES", "")
+	r := reqWith("[2001:db8::6667]:443", map[string]string{
+		"X-Forwarded-For": "1.2.3.4, 2001:db8::1",
+		"X-Real-IP":       "2001:db8::bad",
+	})
+	if got := GetClientIP(r); got != "2001:db8::6667" {
+		t.Fatalf("got %q, want 2001:db8::6667", got)
+	}
+
+	// trusted proxies configured, but the peer is not among them: an IPv6
+	// peer matching no entry (exact IPv6 IP differs, IPv4 CIDR cannot
+	// contain it) must have its XFF ignored
+	t.Setenv("TRUSTED_PROXIES", "2001:db8::1, 10.0.0.0/8")
+	r2 := reqWith("[2001:db8::dead]:443", map[string]string{
+		"X-Forwarded-For": "8.8.8.8",
+	})
+	if got := GetClientIP(r2); got != "2001:db8::dead" {
+		t.Fatalf("got %q, want 2001:db8::dead (peer not in trusted list)", got)
+	}
+}
