@@ -8,8 +8,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// bcryptCost is the work factor for password hashing. It is a variable
+// rather than a literal so tests can lower it (bcrypt is deliberately slow
+// by design, and -race instrumentation amplifies that; the suite hashes
+// many passwords). Production always runs it at 14.
+var bcryptCost = 14
+
 func HashPassword(password string) (string, error) {
-	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcryptCost)
 	if err != nil {
 		return "", err
 	}
