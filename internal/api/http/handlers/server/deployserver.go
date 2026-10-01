@@ -20,14 +20,10 @@ func DeployServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := serverservice.GenerateServerConfig(*server); err != nil {
-		log.Printf("Error generating server config: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
-		return
-	}
-
-	if err := serverservice.StartServer(*server); err != nil {
-		log.Printf("Error starting server: %v", err)
+	// generate config + start run as one atomic operation under the
+	// per-interface lock (#14)
+	if err := serverservice.DeployServerLocked(*server); err != nil {
+		log.Printf("Error deploying server: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
 		return
 	}

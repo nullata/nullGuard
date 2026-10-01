@@ -5,6 +5,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,32 +21,15 @@ func RestartServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isActive, err := serverservice.IsServerActive(*server)
-	if err != nil {
-		log.Printf("Error checking server status in RestartServer: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "Could not check server status", nil)
-		return
-	}
-
-	if !isActive {
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is not currently active", nil)
-		return
-	}
-
-	if err := serverservice.StopServer(*server); err != nil {
-		log.Printf("Error stopping server during restart: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
-		return
-	}
-
-	if err := serverservice.GenerateServerConfig(*server); err != nil {
-		log.Printf("Error generating server config during restart: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
-		return
-	}
-
-	if err := serverservice.StartServer(*server); err != nil {
-		log.Printf("Error starting server during restart: %v", err)
+	// the active check and the stop/regenerate/start sequence run under the
+	// per-interface lock, so they can't interleave with auto-restarts, other
+	// restarts, or deploys on the same interface (#14)
+	if err := serverservice.RestartServerLocked(*server); err != nil {
+		if errors.Is(err, serverservice.ErrServerNotActive) {
+			httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is not currently active", nil)
+			return
+		}
+		log.Printf("Error restarting server: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
 		return
 	}

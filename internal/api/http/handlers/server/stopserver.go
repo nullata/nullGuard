@@ -5,6 +5,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,19 +21,14 @@ func StopServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isActive, err := serverservice.IsServerActive(*server)
-	if err != nil {
-		log.Printf("Error checking server status in StopServer: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "Could not check server status", nil)
-		return
-	}
-
-	if !isActive {
-		httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is not currently active", nil)
-		return
-	}
-
-	if err := serverservice.StopServer(*server); err != nil {
+	// the active check and the stop run under the per-interface lock, so
+	// they can't interleave with auto-restarts or other lifecycle
+	// operations on the same interface (#14)
+	if err := serverservice.StopServerLocked(*server); err != nil {
+		if errors.Is(err, serverservice.ErrServerNotActive) {
+			httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is not currently active", nil)
+			return
+		}
 		log.Printf("Error stopping server: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
 		return

@@ -6,6 +6,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -39,6 +40,45 @@ const (
 	// conflicts with common private networks that clients might already use
 	// (e.g., 10.0.0.0/8, 10.1.0.0/16, etc.)
 	availableRangeStart = 240
+)
+
+// Sentinel errors for interface lifecycle operations, so HTTP handlers can
+// distinguish "wrong state" (400) from genuine failures (500).
+var (
+	ErrServerNotActive = errors.New("server is not currently active")
+)
+
+// Command-execution seams. These are variables so tests can stub wg/wg-quick/ip
+// execution without root, real interfaces, or host network mutation.
+var (
+	// execWgQuick runs `wg-quick <args...>` and returns captured stderr
+	// alongside the command error.
+	execWgQuick = func(args ...string) (stderr string, err error) {
+		cmd := exec.Command("wg-quick", args...)
+		var errBuf bytes.Buffer
+		cmd.Stderr = &errBuf
+		err = cmd.Run()
+		return errBuf.String(), err
+	}
+
+	// execIPLinkDelete runs `ip link delete <iface>` (last-resort teardown).
+	execIPLinkDelete = func(iface string) (stderr string, err error) {
+		cmd := exec.Command("ip", "link", "delete", iface)
+		var errBuf bytes.Buffer
+		cmd.Stderr = &errBuf
+		err = cmd.Run()
+		return errBuf.String(), err
+	}
+
+	// execWgShowInterfaces runs `wg show interfaces` and returns the
+	// whitespace-separated list of live WireGuard interface names.
+	execWgShowInterfaces = func() (stdout string, err error) {
+		cmd := exec.Command("wg", "show", "interfaces")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err = cmd.Run()
+		return out.String(), err
+	}
 )
 
 // fetches the WAN IP address of the local system
@@ -285,15 +325,12 @@ func IsServerActive(server domain.Server) (bool, error) {
 	// `wg show` + strings.Contains is fragile: peer comments, public keys,
 	// or another interface whose name contains ours (e.g. "wg0" inside
 	// "wg01") would produce false positives.
-	cmd := exec.Command("wg", "show", "interfaces")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
+	out, err := execWgShowInterfaces()
+	if err != nil {
 		return false, fmt.Errorf("Error running wg command: %v", err)
 	}
 
-	for _, iface := range strings.Fields(out.String()) {
+	for _, iface := range strings.Fields(out) {
 		if iface == server.InterfaceName {
 			return true, nil
 		}
@@ -328,14 +365,17 @@ func DeleteServerConf(server domain.Server) error {
 
 }
 
-func StopServer(server domain.Server) error {
+func stopServer(server domain.Server) error {
+	// NOTE: callers must hold the per-interface lock (see WithServerLock /
+	// StopServerLocked). This function performs the teardown itself.
+	//
 	// wg-quick down needs the .conf file to tear the interface down cleanly
 	// (it runs the PostDown hooks from it). Two failure modes are worth
 	// handling explicitly here:
 	//
 	//   1. Passing just the interface name to `wg-quick down` makes it look
 	//      up its default path (/etc/wireguard/<iface>.conf), which is only
-	//      right when WG_SERVER_CONF_PATH also points there. StartServer
+	//      right when WG_SERVER_CONF_PATH also points there. startServer
 	//      already passes the full config path for the same reason; we do
 	//      the same on the down path so both sides stay symmetric.
 	//   2. The config file may be missing entirely - typically because
@@ -364,12 +404,10 @@ func StopServer(server domain.Server) error {
 	if fullConfigPath != "" {
 		wgQuickTarget = fullConfigPath
 	}
-	cmd := exec.Command("wg-quick", "down", wgQuickTarget)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
 
-	if err := cmd.Run(); err != nil {
-		wgQuickErr := stderr.String()
+	wgQuickStderr, err := execWgQuick("down", wgQuickTarget)
+	if err != nil {
+		wgQuickErr := wgQuickStderr
 
 		// Last-resort teardown: if the kernel interface is still up, drop it
 		// with `ip link delete`. This skips the PostDown hooks (leftover
@@ -378,12 +416,10 @@ func StopServer(server domain.Server) error {
 		if active, checkErr := IsServerActive(server); checkErr == nil && active {
 			log.Printf("wg-quick down failed for %s (%s); falling back to `ip link delete`",
 				server.InterfaceName, strings.TrimSpace(wgQuickErr))
-			ipCmd := exec.Command("ip", "link", "delete", server.InterfaceName)
-			var ipStderr bytes.Buffer
-			ipCmd.Stderr = &ipStderr
-			if ipErr := ipCmd.Run(); ipErr != nil {
+			ipStderr, ipErr := execIPLinkDelete(server.InterfaceName)
+			if ipErr != nil {
 				return fmt.Errorf("failed to stop server %s: wg-quick: %s; ip link delete: %s",
-					server.InterfaceName, strings.TrimSpace(wgQuickErr), strings.TrimSpace(ipStderr.String()))
+					server.InterfaceName, strings.TrimSpace(wgQuickErr), strings.TrimSpace(ipStderr))
 			}
 			log.Printf("Server stopped via ip link delete: %s", server.InterfaceName)
 			return nil
@@ -413,11 +449,13 @@ func AutoStartServers() {
 	}
 
 	for _, server := range servers {
-		if err := GenerateServerConfig(server); err != nil {
-			log.Printf("Auto-start: failed to generate config for %s: %v", server.InterfaceName, err)
-			continue
-		}
-		if err := StartServer(server); err != nil {
+		err := WithServerLock(server.InterfaceName, func() error {
+			if err := GenerateServerConfig(server); err != nil {
+				return fmt.Errorf("generate config: %w", err)
+			}
+			return startServer(server)
+		})
+		if err != nil {
 			log.Printf("Auto-start: failed to start %s: %v", server.InterfaceName, err)
 			continue
 		}
@@ -438,6 +476,11 @@ func SetAutoRestart(serverID int, enabled bool) error {
 // AutoRestartIfEnabled checks if a server has auto-restart enabled and is active,
 // and if so, restarts it. Errors are logged but not returned since this is a
 // best-effort operation that should not block the caller.
+//
+// The whole check-act sequence runs under the per-interface lock, so it can
+// no longer interleave with manual restarts, other auto-restarts, or deploys
+// (previously it fired as an unguarded goroutine from client mutation
+// handlers, racing wg-quick down/up on the same interface).
 func AutoRestartIfEnabled(serverID int) {
 	server, err := GetServerByID(serverID)
 	if err != nil {
@@ -449,42 +492,96 @@ func AutoRestartIfEnabled(serverID int) {
 		return
 	}
 
-	isActive, err := IsServerActive(server)
-	if err != nil || !isActive {
+	restarted := false
+	err = WithServerLock(server.InterfaceName, func() error {
+		// active check happens inside the lock to avoid check-then-act races
+		isActive, err := IsServerActive(server)
+		if err != nil || !isActive {
+			return nil
+		}
+		if err := restartServer(server); err != nil {
+			return err
+		}
+		restarted = true
+		return nil
+	})
+	if err != nil {
+		log.Printf("Auto-restart: failed to restart %s: %v", server.InterfaceName, err)
 		return
 	}
-
-	if err := StopServer(server); err != nil {
-		log.Printf("Auto-restart: failed to stop server %s: %v", server.InterfaceName, err)
-		return
+	if restarted {
+		log.Printf("Auto-restart: restarted %s", server.InterfaceName)
 	}
-
-	if err := GenerateServerConfig(server); err != nil {
-		log.Printf("Auto-restart: failed to generate config for %s: %v", server.InterfaceName, err)
-		return
-	}
-
-	if err := StartServer(server); err != nil {
-		log.Printf("Auto-restart: failed to start server %s: %v", server.InterfaceName, err)
-		return
-	}
-
-	log.Printf("Auto-restart: restarted %s", server.InterfaceName)
 }
 
-func StartServer(server domain.Server) error {
+// restartServer performs stop -> regenerate config -> start. The
+// caller must hold the per-interface lock.
+func restartServer(server domain.Server) error {
+	if err := stopServer(server); err != nil {
+		return fmt.Errorf("stop: %w", err)
+	}
+	if err := GenerateServerConfig(server); err != nil {
+		return fmt.Errorf("generate config: %w", err)
+	}
+	if err := startServer(server); err != nil {
+		return fmt.Errorf("start: %w", err)
+	}
+	return nil
+}
+
+// DeployServerLocked generates the server config and starts the interface as
+// one atomic, per-interface-locked operation.
+func DeployServerLocked(server domain.Server) error {
+	return WithServerLock(server.InterfaceName, func() error {
+		if err := GenerateServerConfig(server); err != nil {
+			return fmt.Errorf("failed to generate server config: %w", err)
+		}
+		return startServer(server)
+	})
+}
+
+// StopServerLocked stops the interface if active, under the per-interface
+// lock. Returns ErrServerNotActive when the interface is not running.
+func StopServerLocked(server domain.Server) error {
+	return WithServerLock(server.InterfaceName, func() error {
+		isActive, err := IsServerActive(server)
+		if err != nil {
+			return fmt.Errorf("failed to check server status: %w", err)
+		}
+		if !isActive {
+			return ErrServerNotActive
+		}
+		return stopServer(server)
+	})
+}
+
+// RestartServerLocked restarts a running interface under the per-interface
+// lock: the active check, stop, config regeneration and start all happen
+// atomically with respect to other lifecycle operations on this interface.
+// Returns ErrServerNotActive when the interface is not running.
+func RestartServerLocked(server domain.Server) error {
+	return WithServerLock(server.InterfaceName, func() error {
+		isActive, err := IsServerActive(server)
+		if err != nil {
+			return fmt.Errorf("failed to check server status: %w", err)
+		}
+		if !isActive {
+			return ErrServerNotActive
+		}
+		return restartServer(server)
+	})
+}
+
+func startServer(server domain.Server) error {
 	serverConfigPath := config.GetEnv("WG_SERVER_CONF_PATH", "./")
 	if string(serverConfigPath[len(serverConfigPath)-1]) != "/" {
 		serverConfigPath = serverConfigPath + "/"
 	}
 	fullConfigPath := serverConfigPath + server.InterfaceName + constants.WgServerConfExt
 
-	cmd := exec.Command("wg-quick", "up", fullConfigPath)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to start server %s: %s", server.InterfaceName, stderr.String())
+	stderr, err := execWgQuick("up", fullConfigPath)
+	if err != nil {
+		return fmt.Errorf("failed to start server %s: %s", server.InterfaceName, stderr)
 	}
 
 	log.Printf("Server started: %s", server.InterfaceName)
