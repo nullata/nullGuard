@@ -5,13 +5,13 @@
 package server
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
 	"nullguard/internal/api/http/models"
 	"nullguard/internal/pkg/constants"
 	"nullguard/internal/pkg/httputil"
-	clientservice "nullguard/internal/service/client"
 	serverservice "nullguard/internal/service/server"
 )
 
@@ -42,31 +42,17 @@ func DeleteServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isServerActive, err := serverservice.IsServerActive(server)
-	if isServerActive {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "Server is active. Please stop the server before deleting", nil)
-		return
-	} else if err != nil {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
-		return
-	}
-
-	// delete clients before deleting the server due to dependencies
-	if err := clientservice.DeleteClientsByServerID(server.ID); err != nil {
-		log.Printf("Error deleting clients for server: %v", err)
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "There was a problem deleting clients for the requested server", nil)
-		return
-	}
-
-	if err := serverservice.DeleteServer(&server); err != nil {
+	// check + cascade client delete + row delete + conf removal run as one
+	// locked critical section: the inactive check inside the lock closes
+	// the TOCTOU where a concurrent deploy started the interface and this
+	// handler then deleted the conf underneath it (#18)
+	if err := serverservice.DeleteServerIfInactiveLocked(server); err != nil {
+		if errors.Is(err, serverservice.ErrServerActive) {
+			httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is active. Please stop the server before deleting", nil)
+			return
+		}
 		log.Printf("Error deleting server: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "There was a problem deleting requested server", nil)
-		return
-	}
-
-	// delete server configuration file
-	if err := serverservice.DeleteServerConf(server); err != nil {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
 		return
 	}
 

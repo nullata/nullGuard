@@ -5,6 +5,7 @@
 package server
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -40,24 +41,17 @@ func UpdateServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isServerActive, err := serverservice.IsServerActive(oldServer)
-	if isServerActive {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "Server is active. Please stop the server before updating", nil)
-		return
-	} else if err != nil {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
-		return
-	}
-
-	if err := serverservice.UpdateServer(&oldServer, newServer); err != nil {
+	// inactive check + row update + stale conf removal run as one locked
+	// critical section, so a concurrent deploy cannot start the interface
+	// between the check and DeleteServerConf and end up running on a just
+	// deleted config file (#18)
+	if err := serverservice.UpdateServerIfInactiveLocked(&oldServer, newServer); err != nil {
+		if errors.Is(err, serverservice.ErrServerActive) {
+			httputil.SendJSONResponse(w, http.StatusBadRequest, constants.StatusError, "Server is active. Please stop the server before updating", nil)
+			return
+		}
 		log.Printf("Error updating server: %v", err)
 		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, "There was a problem while updating the server configuration", nil)
-		return
-	}
-
-	// delete the old server configuration file if it exists
-	if err := serverservice.DeleteServerConf(oldServer); err != nil {
-		httputil.SendJSONResponse(w, http.StatusInternalServerError, constants.StatusError, err.Error(), nil)
 		return
 	}
 

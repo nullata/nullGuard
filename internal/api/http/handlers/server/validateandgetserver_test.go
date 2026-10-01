@@ -141,7 +141,7 @@ func TestValidateAndGetServer_MissingServerIDIsClean400(t *testing.T) {
 	testutil.NewTestDB(t)
 
 	for _, body := range []string{
-		`{"interfaceName":"wg0"}`,        // omitted entirely: the #21 repro
+		`{"interfaceName":"wg0"}`, // omitted entirely: the #21 repro
 		`{"serverId":0,"interfaceName":"wg0"}`,
 		`{"serverId":-2,"interfaceName":"wg0"}`,
 		`{"interfaceName":"wg0","extra":true}`,

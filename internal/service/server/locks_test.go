@@ -23,9 +23,9 @@ import (
 // that lifecycle operations never overlap on the same interface.
 type fakeExec struct {
 	mu      sync.Mutex
-	seq     []string          // ordered "<op> <target>" records
-	active  map[string]int    // interface -> in-flight wg-quick ops
-	maxAct  map[string]int    // interface -> high-water mark of in-flight ops
+	seq     []string                 // ordered "<op> <target>" records
+	active  map[string]int           // interface -> in-flight wg-quick ops
+	maxAct  map[string]int           // interface -> high-water mark of in-flight ops
 	blockOn map[string]chan struct{} // if set, wg-quick for that iface waits
 
 	activeIfaces atomic.Value // string: space-separated `wg show interfaces` output

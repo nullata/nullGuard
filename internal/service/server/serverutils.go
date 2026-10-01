@@ -46,6 +46,7 @@ const (
 // distinguish "wrong state" (400) from genuine failures (500).
 var (
 	ErrServerNotActive = errors.New("server is not currently active")
+	ErrServerActive    = errors.New("server is active")
 )
 
 // Command-execution seams. These are variables so tests can stub wg/wg-quick/ip
@@ -581,6 +582,58 @@ func RestartServerLocked(server domain.Server) error {
 			return ErrServerNotActive
 		}
 		return restartServer(server)
+	})
+}
+
+// DeleteServerIfInactiveLocked removes the server's clients, its row, and
+// its <iface>.conf as one critical section under the per-interface lock.
+// The inactive check runs inside the lock, so a concurrent deploy cannot
+// start the interface between the check and the conf deletion (the
+// handler-level check-then-delete was the TOCTOU in #18: a row could be
+// deleted while wg-quick state was live, orphans of conf under a running
+// interface). Returns ErrServerActive when the interface is running; the
+// caller must not touch the row afterward.
+//
+// Clients are deleted via the repository directly: the client service
+// imports this package, so calling it here would be an import cycle.
+func DeleteServerIfInactiveLocked(server domain.Server) error {
+	return WithServerLock(server.InterfaceName, func() error {
+		isActive, err := IsServerActive(server)
+		if err != nil {
+			return fmt.Errorf("failed to check server status: %w", err)
+		}
+		if isActive {
+			return ErrServerActive
+		}
+		if err := repository.DeleteClientsByServerID(server.ID); err != nil {
+			return fmt.Errorf("delete clients: %w", err)
+		}
+		if err := repository.DeleteServer(&server); err != nil {
+			return fmt.Errorf("delete server: %w", err)
+		}
+		return DeleteServerConf(server)
+	})
+}
+
+// UpdateServerIfInactiveLocked applies the field update and removes the
+// stale <iface>.conf as one critical section under the per-interface lock,
+// so a deploy cannot slip between the inactive check and the conf removal
+// and leave the freshly started interface with its config deleted under it
+// (#18, same shape as DeleteServerIfInactiveLocked). Returns
+// ErrServerActive when the interface is running.
+func UpdateServerIfInactiveLocked(oldServer *domain.Server, newServer domain.Server) error {
+	return WithServerLock(oldServer.InterfaceName, func() error {
+		isActive, err := IsServerActive(*oldServer)
+		if err != nil {
+			return fmt.Errorf("failed to check server status: %w", err)
+		}
+		if isActive {
+			return ErrServerActive
+		}
+		if err := UpdateServer(oldServer, newServer); err != nil {
+			return err
+		}
+		return DeleteServerConf(*oldServer)
 	})
 }
 
