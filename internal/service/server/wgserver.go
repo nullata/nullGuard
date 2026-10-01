@@ -299,6 +299,12 @@ func ValidateDeployData(deployData models.DeployData) (*int, error) {
 			idPtr = &idValue
 		}
 	}
+	if idPtr == nil {
+		// Destructive operations require both a serverId and a matching
+		// interfaceName; callers dereference the result unconditionally, so
+		// a missing or non-positive id must be a 400, not a nil deref (#21).
+		return nil, fmt.Errorf("Server id is required")
+	}
 	return idPtr, nil
 }
 

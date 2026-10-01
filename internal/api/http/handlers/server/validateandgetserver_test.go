@@ -19,9 +19,6 @@ import (
 // AGENTS.md rule: destructive server operations require BOTH serverId and
 // a matching interfaceName. These tests pin the pairing behavior of the
 // shared validator used by deploy/restart/stop handlers.
-//
-// Note: the no-serverId case is a known nil-deref (#21); its regression
-// test lands with that fix and is deliberately not pinned here.
 
 func seedServer(t *testing.T, name string) domain.Server {
 	t.Helper()
@@ -134,5 +131,48 @@ func TestValidateAndGetServer_IdNumberOrString(t *testing.T) {
 	var probe map[string]any
 	if err := json.Unmarshal(rec.Body.Bytes(), &probe); err != nil || probe["status"] != "error" {
 		t.Fatalf("error envelope missing: %s", rec.Body.String())
+	}
+}
+
+// #21 regression: an omitted (or non-positive) serverId used to make
+// ValidateDeployData return (nil, nil); validateAndGetServer then did
+// *serverID and panicked the request for any authenticated caller.
+func TestValidateAndGetServer_MissingServerIDIsClean400(t *testing.T) {
+	testutil.NewTestDB(t)
+
+	for _, body := range []string{
+		`{"interfaceName":"wg0"}`,        // omitted entirely: the #21 repro
+		`{"serverId":0,"interfaceName":"wg0"}`,
+		`{"serverId":-2,"interfaceName":"wg0"}`,
+		`{"interfaceName":"wg0","extra":true}`,
+	} {
+		srv, ok, rec := callValidate(t, http.MethodPost, body)
+		if ok || srv != nil {
+			t.Fatalf("body %s: handler proceeded past missing id", body)
+		}
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("body %s: status %d, want 400 (panic would be 500)", body, rec.Code)
+		}
+	}
+}
+
+// DeleteServer does its own ValidateDeployData + deref rather than sharing
+// the helper; pin the same guarantee there.
+func TestDeleteServer_MissingServerIDIsClean400(t *testing.T) {
+	testutil.NewTestDB(t)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/delete-server",
+		strings.NewReader(`{"interfaceName":"wg0"}`))
+	rec := httptest.NewRecorder()
+
+	// must return 400 before touching wg/DB with a dereferenced id
+	defer func() {
+		if p := recover(); p != nil {
+			t.Fatalf("DeleteServer panicked on missing serverId (#21): %v", p)
+		}
+	}()
+	DeleteServer(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status %d, want 400", rec.Code)
 	}
 }
