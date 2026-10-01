@@ -225,10 +225,15 @@ func GenerateServerConfig(server domain.Server) error {
 		postDown = *server.PostDown + "\n"
 	}
 
+	// NOTE: deliberately no `SaveConfig = true` (#15). With SaveConfig on,
+	// `wg-quick down` persists runtime interface state — including peers
+	// added out-of-band with `wg set`, and any PSKs — back into
+	// <iface>.conf. The database is the single source of truth: every
+	// app-driven start regenerates the conf from it, and persistent peers
+	// belong in nullGuard as clients, not in hand-edited conf drift.
 	config := fmt.Sprintf(`[Interface]
 # %s
 Address = %s
-SaveConfig = true
 %s%sListenPort = %d
 PrivateKey = %s
 `,
