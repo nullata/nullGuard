@@ -34,7 +34,7 @@ func TestServerValidate(t *testing.T) {
 
 	// each mutator breaks exactly one rule from the valid baseline
 	cases := []struct {
-		name  string
+		name   string
 		mutate func(*domain.Server)
 	}{
 		{"empty interface name", func(s *domain.Server) { s.InterfaceName = "  " }},
@@ -100,8 +100,8 @@ func TestServerValidate_UniquenessConflicts(t *testing.T) {
 	}{
 		// each keeps two fields fresh and collides on exactly one
 		{"duplicate interface name", func(s *domain.Server) { s.Address = "10.9.0.1/24"; s.Port = 51821 }}, // name stays wg0
-		{"duplicate address", func(s *domain.Server) { s.InterfaceName = "wg1"; s.Port = 51821 }},           // address stays 10.8.0.1/24
-		{"duplicate port", func(s *domain.Server) { s.InterfaceName = "wg1"; s.Address = "10.9.0.1/24" }},   // port stays 51820
+		{"duplicate address", func(s *domain.Server) { s.InterfaceName = "wg1"; s.Port = 51821 }},          // address stays 10.8.0.1/24
+		{"duplicate port", func(s *domain.Server) { s.InterfaceName = "wg1"; s.Address = "10.9.0.1/24" }},  // port stays 51820
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -146,3 +146,38 @@ func TestClientValidate_UniquenessWithinServer(t *testing.T) {
 		}
 	})
 }
+
+// Client-side mirror of the update contract: ExposedLans (pointer) clears
+// when the payload omits/empties it; DnsServers "" clears; keepalive 0
+// overwrites (the client UI sends full payloads on every edit).
+func TestUpdateClient_OptionalFieldSemantics(t *testing.T) {
+	testutil.NewTestDB(t)
+	srv := seedClientServer(t)
+
+	old := validClient(srv)
+	old.DnsServers = "8.8.8.8"
+	old.ExposedLans = cptr("192.168.1.0/24")
+	old.Keepalive = 45
+	if err := database.DB.Create(&old).Error; err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	updated := validClient(srv) // same name/address as old
+	updated.ID = old.ID
+	updated.DnsServers = ""
+	updated.ExposedLans = nil
+	updated.Keepalive = 0
+
+	if err := UpdateClient(&old, updated); err != nil {
+		t.Fatalf("UpdateClient: %v", err)
+	}
+	if old.DnsServers != "" {
+		t.Fatalf("empty dns must clear, got %q", old.DnsServers)
+	}
+	if old.ExposedLans != nil {
+		t.Fatalf("nil exposedLans must clear, got %q", *old.ExposedLans)
+	}
+	if old.Keepalive != 0 {
+		t.Fatalf("keepalive 0 must overwrite 45, got %d", old.Keepalive)
+	}
+}

@@ -28,8 +28,8 @@ func wgDumpLine(pub, pkey, ep, allowed string, handshake, rx, tx int64) string {
 
 func TestGetPeerStatuses_Parsing(t *testing.T) {
 	now := time.Now().Unix()
-	recent := now - 30           // inside the 3-minute freshness window
-	stale := now - 4*60          // past it
+	recent := now - 30  // inside the 3-minute freshness window
+	stale := now - 4*60 // past it
 	header := "public key\tpre-shared key\tendpoint\tallowed ips\thandshake\treceived\ttransferred\tpersistent keepalive"
 
 	dump := strings.Join([]string{
