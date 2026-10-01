@@ -79,6 +79,16 @@ var (
 		err = cmd.Run()
 		return out.String(), err
 	}
+
+	// execWgShowDump runs `wg show <iface> dump` and returns the raw
+	// tab-separated peer table.
+	execWgShowDump = func(interfaceName string) (stdout string, err error) {
+		cmd := exec.Command("wg", "show", interfaceName, "dump")
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err = cmd.Run()
+		return out.String(), err
+	}
 )
 
 // fetches the WAN IP address of the local system
@@ -289,16 +299,13 @@ type PeerStatus struct {
 // ages past this threshold and the peer is no longer considered connected.
 // Transfer counters are cumulative since the interface was brought up.
 func GetPeerStatuses(interfaceName string) map[string]PeerStatus {
-	cmd := exec.Command("wg", "show", interfaceName, "dump")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
+	out, err := execWgShowDump(interfaceName)
+	if err != nil {
 		return map[string]PeerStatus{}
 	}
 
 	peers := make(map[string]PeerStatus)
-	lines := strings.Split(out.String(), "\n")
+	lines := strings.Split(out, "\n")
 	for i, line := range lines {
 		if i == 0 || strings.TrimSpace(line) == "" {
 			continue

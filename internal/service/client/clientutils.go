@@ -19,7 +19,10 @@ func GetSubnetBaseCIDR(cidr string) (string, net.IPNet, error) {
 	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
 		log.Printf("Error parsing CIDR: %v", err)
-		return "", *ipNet, err
+		// ipNet is nil when ParseCIDR failed; dereferencing it panicked the
+		// request instead of surfacing the error to the (already error-aware)
+		// callers. Return the zero value.
+		return "", net.IPNet{}, err
 	}
 
 	ones, _ := ipNet.Mask.Size() // get the prefix size (eg 24 for /24)
