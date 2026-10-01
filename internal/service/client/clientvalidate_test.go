@@ -67,6 +67,9 @@ func TestClientValidate(t *testing.T) {
 		{"invalid dns server", func(c *domain.Client) { c.DnsServers = "not-an-ip" }},
 		{"invalid exposed lan entry", func(c *domain.Client) { c.ExposedLans = cptr("192.168.1.0/24,oops/33") }},
 		{"unknown server", func(c *domain.Client) { c.ServerID = 999 }},
+		// #19: newline injection into the generated [Peer] block
+		{"private key newline injection", func(c *domain.Client) { c.PrivateKey = "k3y\nPostUp=evil.sh" }},
+		{"public key newline injection", func(c *domain.Client) { c.PublicKey = "k3y\nPostUp=evil.sh" }},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

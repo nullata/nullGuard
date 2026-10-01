@@ -121,6 +121,15 @@ func Validate(client *domain.Client) error {
 		return fmt.Errorf("Private key must not contain spaces")
 	}
 
+	// newline injection into generated confs (#19); client Name is already
+	// covered by AllowedNameRegex
+	if err := validation.ValidateSingleLine("Public key", client.PublicKey); err != nil {
+		return err
+	}
+	if err := validation.ValidateSingleLine("Private key", client.PrivateKey); err != nil {
+		return err
+	}
+
 	if client.AddressCidr == "" {
 		return fmt.Errorf("Client address CIDR cannot be empty")
 	}

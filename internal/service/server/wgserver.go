@@ -216,6 +216,24 @@ func Validate(server *domain.Server) error {
 		return fmt.Errorf("Private key must not contain spaces")
 	}
 
+	// single-line enforcement for values embedded verbatim into the
+	// generated conf: a newline here injects live config directives that
+	// wg-quick executes as root (#19). Keys are checked because a payload
+	// like "k\nAddress=1.2.3.4/32" contains no space and slips past the
+	// space guards. PostUp/PostDown are deliberately NOT restricted:
+	// multi-line command blocks are their purpose (the built-in default
+	// template spans three lines); they remain the admin-set root-exec
+	// field by design.
+	if err := validation.ValidateSingleLine("Comment", server.Comment); err != nil {
+		return err
+	}
+	if err := validation.ValidateSingleLine("Public key", server.PublicKey); err != nil {
+		return err
+	}
+	if err := validation.ValidateSingleLine("Private key", server.PrivateKey); err != nil {
+		return err
+	}
+
 	if server.Address == "" || server.WANAddress == "" {
 		return fmt.Errorf("Address and WAN Address cannot be empty")
 	}

@@ -19,6 +19,17 @@ func init() {
 	AllowedNameRegex = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
 }
 
+// ValidateSingleLine rejects CR/LF in values that get embedded verbatim
+// into generated wg-quick config files (comments, keys). A newline there
+// writes a live config line that wg-quick honors as root - e.g. a crafted
+// PrivateKey value could inject a PostUp directive (#19).
+func ValidateSingleLine(field, value string) error {
+	if strings.ContainsAny(value, "\r\n") {
+		return fmt.Errorf("%s cannot contain newlines", field)
+	}
+	return nil
+}
+
 func ValidateCIDR(cidrStr string) (string, error) {
 	ip, _, err := net.ParseCIDR(cidrStr)
 	if err != nil {
