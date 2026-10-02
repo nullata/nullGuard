@@ -2,7 +2,7 @@
 .env
 
 # Build outputs
-nullguard
+/nullguard
 *.exe
 
 # Local SQLite databases
